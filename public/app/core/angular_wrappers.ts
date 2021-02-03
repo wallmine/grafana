@@ -202,7 +202,6 @@ export function registerAngularDirectives() {
   react2AngularDirective('azureMonitorQueryEditor', QueryEditor, [
     'query',
     ['datasource', { watchDepth: 'reference' }],
-    'replaceTemplateVariable',
-    'onQueryChange',
+    'onChange',
   ]);
 }
