@@ -55,7 +55,7 @@ func (p *DataSourcePlugin) Load(decoder *json.Decoder, base *PluginBase, backend
 		}
 	}
 
-	DataSources[p.Id] = p
+	p.Manager.DataSources[p.Id] = p
 	return nil
 }
 

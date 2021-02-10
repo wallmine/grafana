@@ -58,7 +58,7 @@ type JwtTokenAuth struct {
 	Params map[string]string `json:"params"`
 }
 
-func (app *AppPlugin) Load(decoder *json.Decoder, base *PluginBase, backendPluginManager backendplugin.Manager) error {
+func (app *AppPlugin) Loadd(decoder *json.Decoder, base *PluginBase, backendPluginManager backendplugin.Manager) error {
 	if err := decoder.Decode(app); err != nil {
 		return err
 	}
@@ -96,7 +96,7 @@ func (app *AppPlugin) initApp() {
 	}
 
 	// check if we have child datasources
-	for _, ds := range DataSources {
+	for _, ds := range app.Manager.DataSources {
 		if strings.HasPrefix(ds.PluginDir, app.PluginDir) {
 			ds.setPathsBasedOnApp(app)
 			app.FoundChildPlugins = append(app.FoundChildPlugins, &PluginInclude{

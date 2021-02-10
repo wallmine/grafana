@@ -101,6 +101,8 @@ type PluginBase struct {
 	GrafanaNetVersion   string `json:"-"`
 	GrafanaNetHasUpdate bool   `json:"-"`
 
+	Manager *PluginManager
+
 	Root *PluginBase
 }
 

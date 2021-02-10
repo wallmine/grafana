@@ -24,7 +24,6 @@ import (
 )
 
 var (
-	DataSources  map[string]*DataSourcePlugin
 	Panels       map[string]*PanelPlugin
 	StaticRoutes []*PluginStaticRoute
 	Apps         map[string]*AppPlugin
@@ -59,6 +58,7 @@ type PluginManager struct {
 	AllowUnsignedPluginsCondition unsignedPluginConditionFunc
 	GrafanaLatestVersion          string
 	GrafanaHasUpdate              bool
+	DataSources                   map[string]*DataSourcePlugin
 	pluginScanningErrors          map[string]PluginError
 }
 
@@ -70,7 +70,7 @@ func (pm *PluginManager) Init() error {
 	pm.log = log.New("plugins")
 	plog = log.New("plugins")
 
-	DataSources = map[string]*DataSourcePlugin{}
+	pm.DataSources = map[string]*DataSourcePlugin{}
 	StaticRoutes = []*PluginStaticRoute{}
 	Panels = map[string]*PanelPlugin{}
 	Apps = map[string]*AppPlugin{}
@@ -130,7 +130,7 @@ func (pm *PluginManager) Init() error {
 		panel.initFrontendPlugin()
 	}
 
-	for _, ds := range DataSources {
+	for _, ds := range pm.DataSources {
 		ds.initFrontendPlugin()
 	}
 
@@ -310,8 +310,8 @@ func (pm *PluginManager) scan(pluginDir string, requireSigned bool) error {
 // This function fetches the datasource from the global variable DataSources in this package.
 // Rather then refactor all dependencies on the global variable we can use this as an transition.
 func (pm *PluginManager) GetDatasource(pluginID string) (*DataSourcePlugin, bool) {
-	ds, exist := DataSources[pluginID]
-	return ds, exist
+	ds, exists := pm.DataSources[pluginID]
+	return ds, exists
 }
 
 func (s *PluginScanner) walker(currentPath string, f os.FileInfo, err error) error {

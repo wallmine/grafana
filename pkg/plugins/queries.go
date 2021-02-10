@@ -51,7 +51,7 @@ func GetPluginSettings(orgId int64) (map[string]*models.PluginSettingInfoDTO, er
 	return pluginMap, nil
 }
 
-func GetEnabledPlugins(orgId int64) (*EnabledPlugins, error) {
+func (pm *PluginManager) GetEnabledPlugins(orgId int64) (*EnabledPlugins, error) {
 	enabledPlugins := NewEnabledPlugins()
 	pluginSettingMap, err := GetPluginSettings(orgId)
 	if err != nil {
@@ -71,7 +71,7 @@ func GetEnabledPlugins(orgId int64) (*EnabledPlugins, error) {
 	}
 
 	// add all plugins that are not part of an App.
-	for dsId, ds := range DataSources {
+	for dsId, ds := range pm.DataSources {
 		if isPluginEnabled(ds.Id) {
 			enabledPlugins.DataSources[dsId] = ds
 		}
