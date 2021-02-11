@@ -1,9 +1,8 @@
-package plugins
+package models
 
 import (
 	"encoding/json"
 	"path/filepath"
-	"strings"
 
 	"github.com/gosimple/slug"
 	"github.com/grafana/grafana/pkg/models"
@@ -63,9 +62,11 @@ func (app *AppPlugin) Loadd(decoder *json.Decoder, base *PluginBase, backendPlug
 		return err
 	}
 
-	if err := app.registerPlugin(base); err != nil {
-		return err
-	}
+	/*
+		if err := app.registerPlugin(base); err != nil {
+			return err
+		}
+	*/
 
 	if app.Backend {
 		cmd := ComposePluginStartCommand(app.Executable)
@@ -76,36 +77,40 @@ func (app *AppPlugin) Loadd(decoder *json.Decoder, base *PluginBase, backendPlug
 		}
 	}
 
-	Apps[app.Id] = app
+	/*
+		Apps[app.Id] = app
+	*/
 	return nil
 }
 
-func (app *AppPlugin) initApp() {
-	app.initFrontendPlugin()
+func (app *AppPlugin) InitApp() {
+	app.InitFrontendPlugin()
 
-	// check if we have child panels
-	for _, panel := range Panels {
-		if strings.HasPrefix(panel.PluginDir, app.PluginDir) {
-			panel.setPathsBasedOnApp(app)
-			app.FoundChildPlugins = append(app.FoundChildPlugins, &PluginInclude{
-				Name: panel.Name,
-				Id:   panel.Id,
-				Type: panel.Type,
-			})
-		}
-	}
+	/*
+			// check if we have child panels
+			for _, panel := range Panels {
+				if strings.HasPrefix(panel.PluginDir, app.PluginDir) {
+					panel.setPathsBasedOnApp(app)
+					app.FoundChildPlugins = append(app.FoundChildPlugins, &PluginInclude{
+						Name: panel.Name,
+						Id:   panel.Id,
+						Type: panel.Type,
+					})
+				}
+			}
 
-	// check if we have child datasources
-	for _, ds := range app.Manager.DataSources {
-		if strings.HasPrefix(ds.PluginDir, app.PluginDir) {
-			ds.setPathsBasedOnApp(app)
-			app.FoundChildPlugins = append(app.FoundChildPlugins, &PluginInclude{
-				Name: ds.Name,
-				Id:   ds.Id,
-				Type: ds.Type,
-			})
+		// check if we have child datasources
+		for _, ds := range app.Manager.DataSources {
+			if strings.HasPrefix(ds.PluginDir, app.PluginDir) {
+				ds.setPathsBasedOnApp(app)
+				app.FoundChildPlugins = append(app.FoundChildPlugins, &PluginInclude{
+					Name: ds.Name,
+					Id:   ds.Id,
+					Type: ds.Type,
+				})
+			}
 		}
-	}
+	*/
 
 	// slugify pages
 	for _, include := range app.Includes {

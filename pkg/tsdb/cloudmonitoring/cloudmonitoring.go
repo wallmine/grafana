@@ -68,7 +68,7 @@ type CloudMonitoringExecutor struct {
 	dsInfo     *models.DataSource
 }
 
-// NewCloudMonitoringExecutor initializes a http client
+// NewCloudMonitoringExecutor returns a CloudMonitoringExecutor.
 func NewCloudMonitoringExecutor(dsInfo *models.DataSource) (tsdb.TsdbQueryEndpoint, error) {
 	httpClient, err := dsInfo.GetHttpClient()
 	if err != nil {

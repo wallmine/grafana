@@ -529,40 +529,40 @@ func ConvertSqlTimeColumnToEpochMs(values tsdb.RowValues, timeIndex int) {
 				values[timeIndex] = float64(value.UnixNano()) / float64(time.Millisecond)
 			}
 		case int64:
-			values[timeIndex] = int64(tsdb.EpochPrecisionToMs(float64(value)))
+			values[timeIndex] = int64(epochPrecisionToMS(float64(value)))
 		case *int64:
 			if value != nil {
-				values[timeIndex] = int64(tsdb.EpochPrecisionToMs(float64(*value)))
+				values[timeIndex] = int64(epochPrecisionToMS(float64(*value)))
 			}
 		case uint64:
-			values[timeIndex] = int64(tsdb.EpochPrecisionToMs(float64(value)))
+			values[timeIndex] = int64(epochPrecisionToMS(float64(value)))
 		case *uint64:
 			if value != nil {
-				values[timeIndex] = int64(tsdb.EpochPrecisionToMs(float64(*value)))
+				values[timeIndex] = int64(epochPrecisionToMS(float64(*value)))
 			}
 		case int32:
-			values[timeIndex] = int64(tsdb.EpochPrecisionToMs(float64(value)))
+			values[timeIndex] = int64(epochPrecisionToMS(float64(value)))
 		case *int32:
 			if value != nil {
-				values[timeIndex] = int64(tsdb.EpochPrecisionToMs(float64(*value)))
+				values[timeIndex] = int64(epochPrecisionToMS(float64(*value)))
 			}
 		case uint32:
-			values[timeIndex] = int64(tsdb.EpochPrecisionToMs(float64(value)))
+			values[timeIndex] = int64(epochPrecisionToMS(float64(value)))
 		case *uint32:
 			if value != nil {
-				values[timeIndex] = int64(tsdb.EpochPrecisionToMs(float64(*value)))
+				values[timeIndex] = int64(epochPrecisionToMS(float64(*value)))
 			}
 		case float64:
-			values[timeIndex] = tsdb.EpochPrecisionToMs(value)
+			values[timeIndex] = epochPrecisionToMS(value)
 		case *float64:
 			if value != nil {
-				values[timeIndex] = tsdb.EpochPrecisionToMs(*value)
+				values[timeIndex] = epochPrecisionToMS(*value)
 			}
 		case float32:
-			values[timeIndex] = tsdb.EpochPrecisionToMs(float64(value))
+			values[timeIndex] = epochPrecisionToMS(float64(value))
 		case *float32:
 			if value != nil {
-				values[timeIndex] = tsdb.EpochPrecisionToMs(float64(*value))
+				values[timeIndex] = epochPrecisionToMS(float64(*value))
 			}
 		}
 	}
@@ -719,4 +719,19 @@ func (m *SqlMacroEngineBase) ReplaceAllStringSubmatchFunc(re *regexp.Regexp, str
 	}
 
 	return result + str[lastIndex:]
+}
+
+// epochPrecisionToMS converts epoch precision to millisecond, if needed.
+// Only seconds to milliseconds supported right now
+func epochPrecisionToMS(value float64) float64 {
+	s := strconv.FormatFloat(value, 'e', -1, 64)
+	if strings.HasSuffix(s, "e+09") {
+		return value * float64(1e3)
+	}
+
+	if strings.HasSuffix(s, "e+18") {
+		return value / float64(time.Millisecond)
+	}
+
+	return value
 }

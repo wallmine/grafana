@@ -1,4 +1,4 @@
-package plugins
+package models
 
 import (
 	"encoding/json"
@@ -16,10 +16,12 @@ func (p *PanelPlugin) Load(decoder *json.Decoder, base *PluginBase, backendPlugi
 		return err
 	}
 
-	if err := p.registerPlugin(base); err != nil {
-		return err
-	}
+	/*
+			if err := p.registerPlugin(base); err != nil {
+				return err
+			}
 
-	Panels[p.Id] = p
+		Panels[p.Id] = p
+	*/
 	return nil
 }

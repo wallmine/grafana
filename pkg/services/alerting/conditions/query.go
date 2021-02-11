@@ -29,12 +29,11 @@ func init() {
 // QueryCondition is responsible for issue and query, reduce the
 // timeseries into single values and evaluate if they are firing or not.
 type QueryCondition struct {
-	Index         int
-	Query         AlertQuery
-	Reducer       *queryReducer
-	Evaluator     AlertEvaluator
-	Operator      string
-	HandleRequest tsdb.HandleRequestFunc
+	Index     int
+	Query     AlertQuery
+	Reducer   *queryReducer
+	Evaluator AlertEvaluator
+	Operator  string
 }
 
 // AlertQuery contains information about what datasource a query

@@ -5,22 +5,48 @@ import (
 	"fmt"
 
 	"github.com/grafana/grafana/pkg/models"
+	"github.com/grafana/grafana/pkg/plugins/manager"
+	"github.com/grafana/grafana/pkg/registry"
+	"github.com/grafana/grafana/pkg/setting"
 )
+
+func init() {
+	registry.Register(registry.Descriptor{
+		Name:     "TSDBService",
+		Instance: &Service{},
+	})
+}
 
 type HandleRequestFunc func(ctx context.Context, dsInfo *models.DataSource, req *TsdbQuery) (*Response, error)
 
-func HandleRequest(ctx context.Context, dsInfo *models.DataSource, req *TsdbQuery) (*Response, error) {
-	var endpoint TsdbQueryEndpoint
-	fn, exists := registry[dsInfo.Type]
-	if !exists {
-		return nil, fmt.Errorf("could not find executor for data source type: %s", dsInfo.Type)
+type TSDBQueryEndpoint interface {
+	Query(ctx context.Context, ds *models.DataSource, query *TsdbQuery) (*Response, error)
+}
+
+type GetTSDBQueryEndpointFn func(dsInfo *models.DataSource) (TSDBQueryEndpoint, error)
+
+// Service handles requests to TSDB data sources.
+type Service struct {
+	Cfg           *setting.Cfg          `inject:""`
+	PluginManager manager.PluginManager `inject:""`
+
+	registry map[string]GetTSDBQueryEndpointFn
+}
+
+// Init initialises the service.
+func (s *Service) Init() error {
+	return nil
+}
+
+func (s *Service) RegisterTSDBQueryEndpoint(pluginID string, fn GetTSDBQueryEndpointFn) {
+	s.registry[pluginID] = fn
+}
+
+func (s *Service) HandleRequest(ctx context.Context, dsInfo *models.DataSource, req *TsdbQuery) (*Response, error) {
+	plugin := s.PluginManager.GetTSDBPlugin(dsInfo.Type)
+	if plugin == nil {
+		return nil, fmt.Errorf("could not find plugin corresponding to data source type: %q", dsInfo.Type)
 	}
 
-	var err error
-	endpoint, err = fn(dsInfo)
-	if err != nil {
-		return nil, err
-	}
-
-	return endpoint.Query(ctx, dsInfo, req)
+	return plugin.TSDBQuery(ctx, dsInfo, req)
 }

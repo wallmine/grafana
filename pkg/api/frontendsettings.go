@@ -5,6 +5,7 @@ import (
 	"strconv"
 
 	"github.com/grafana/grafana/pkg/models"
+	"github.com/grafana/grafana/pkg/plugins/manager"
 
 	"github.com/grafana/grafana/pkg/components/simplejson"
 	"github.com/grafana/grafana/pkg/util"
@@ -15,7 +16,7 @@ import (
 	"github.com/grafana/grafana/pkg/setting"
 )
 
-func (hs *HTTPServer) getFSDataSources(c *models.ReqContext, enabledPlugins *plugins.EnabledPlugins) (map[string]interface{}, error) {
+func (hs *HTTPServer) getFSDataSources(c *models.ReqContext, enabledPlugins *manager.EnabledPlugins) (map[string]interface{}, error) {
 	orgDataSources := make([]*models.DataSource, 0)
 
 	if c.OrgId != 0 {

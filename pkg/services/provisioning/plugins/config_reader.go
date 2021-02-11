@@ -8,7 +8,7 @@ import (
 	"strings"
 
 	"github.com/grafana/grafana/pkg/infra/log"
-	"github.com/grafana/grafana/pkg/plugins"
+	"github.com/grafana/grafana/pkg/plugins/manager"
 	"gopkg.in/yaml.v2"
 )
 
@@ -18,10 +18,11 @@ type configReader interface {
 
 type configReaderImpl struct {
 	log log.Logger
+	pm  *manager.PluginManager
 }
 
-func newConfigReader(logger log.Logger) configReader {
-	return &configReaderImpl{log: logger}
+func newConfigReader(logger log.Logger, pm *manager.PluginManager) configReader {
+	return &configReaderImpl{log: logger, pm: pm}
 }
 
 func (cr *configReaderImpl) readConfig(path string) ([]*pluginsAsConfig, error) {
@@ -55,7 +56,7 @@ func (cr *configReaderImpl) readConfig(path string) ([]*pluginsAsConfig, error) 
 
 	checkOrgIDAndOrgName(apps)
 
-	err = validatePluginsConfig(apps)
+	err = cr.validatePluginsConfig(apps)
 	if err != nil {
 		return nil, err
 	}
@@ -105,14 +106,14 @@ func validateRequiredField(apps []*pluginsAsConfig) error {
 	return nil
 }
 
-func validatePluginsConfig(apps []*pluginsAsConfig) error {
+func (cr *configReaderImpl) validatePluginsConfig(apps []*pluginsAsConfig) error {
 	for i := range apps {
 		if apps[i].Apps == nil {
 			continue
 		}
 
 		for _, app := range apps[i].Apps {
-			if !plugins.IsAppInstalled(app.PluginID) {
+			if !cr.pm.IsAppInstalled(app.PluginID) {
 				return fmt.Errorf("app plugin not installed: %s", app.PluginID)
 			}
 		}

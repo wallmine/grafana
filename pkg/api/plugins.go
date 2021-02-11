@@ -15,7 +15,7 @@ import (
 	"github.com/grafana/grafana/pkg/models"
 	"github.com/grafana/grafana/pkg/plugins"
 	"github.com/grafana/grafana/pkg/plugins/backendplugin"
-	"github.com/grafana/grafana/pkg/plugins/datasource/wrapper"
+	"github.com/grafana/grafana/pkg/plugins/models/adapters"
 	"github.com/grafana/grafana/pkg/setting"
 	"github.com/grafana/grafana/pkg/util/errutil"
 )
@@ -53,7 +53,7 @@ func (hs *HTTPServer) getPluginContext(pluginID string, user *models.SignedInUse
 	return backend.PluginContext{
 		OrgID:    user.OrgId,
 		PluginID: plugin.Id,
-		User:     wrapper.BackendUserFromSignedInUser(user),
+		User:     adapters.BackendUserFromSignedInUser(user),
 		AppInstanceSettings: &backend.AppInstanceSettings{
 			JSONData:                jsonData,
 			DecryptedSecureJSONData: decryptedSecureJSONData,
@@ -200,10 +200,10 @@ func UpdatePluginSetting(c *models.ReqContext, cmd models.UpdatePluginSettingCmd
 	return response.Success("Plugin settings updated")
 }
 
-func GetPluginDashboards(c *models.ReqContext) response.Response {
+func (hs *HTTPServer) GetPluginDashboards(c *models.ReqContext) response.Response {
 	pluginID := c.Params(":pluginId")
 
-	list, err := plugins.GetPluginDashboards(c.OrgId, pluginID)
+	list, err := hs.PluginManager.GetPluginDashboards(c.OrgId, pluginID)
 	if err != nil {
 		var notFound plugins.PluginNotFoundError
 		if errors.As(err, &notFound) {

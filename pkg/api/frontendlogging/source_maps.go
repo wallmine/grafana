@@ -12,7 +12,7 @@ import (
 	sourcemap "github.com/go-sourcemap/sourcemap"
 
 	"github.com/getsentry/sentry-go"
-	"github.com/grafana/grafana/pkg/plugins"
+	"github.com/grafana/grafana/pkg/plugins/manager"
 	"github.com/grafana/grafana/pkg/setting"
 )
 
@@ -43,16 +43,18 @@ func ReadSourceMapFromFS(dir string, path string) ([]byte, error) {
 }
 
 type SourceMapStore struct {
+	sync.Mutex
 	cache         map[string]*sourceMap
 	cfg           *setting.Cfg
+	pm            *manager.PluginManager
 	readSourceMap ReadSourceMapFn
-	sync.Mutex
 }
 
-func NewSourceMapStore(cfg *setting.Cfg, readSourceMap ReadSourceMapFn) *SourceMapStore {
+func NewSourceMapStore(cfg *setting.Cfg, pm *manager.PluginManager, readSourceMap ReadSourceMapFn) *SourceMapStore {
 	return &SourceMapStore{
 		cache:         make(map[string]*sourceMap),
 		cfg:           cfg,
+		pm:            pm,
 		readSourceMap: readSourceMap,
 	}
 }
@@ -77,7 +79,7 @@ func (store *SourceMapStore) guessSourceMapLocation(sourceURL string) (*sourceMa
 		}, nil
 		// if source comes from a plugin, look in plugin dir
 	} else if strings.HasPrefix(u.Path, "/public/plugins/") {
-		for _, route := range plugins.StaticRoutes {
+		for _, route := range store.pm.StaticRoutes {
 			pluginPrefix := filepath.Join("/public/plugins/", route.PluginId)
 			if strings.HasPrefix(u.Path, pluginPrefix) {
 				return &sourceMapLocation{

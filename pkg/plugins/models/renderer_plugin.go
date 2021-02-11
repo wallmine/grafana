@@ -1,4 +1,4 @@
-package plugins
+package models
 
 import (
 	"context"
@@ -27,9 +27,11 @@ func (r *RendererPlugin) Load(decoder *json.Decoder, base *PluginBase, backendPl
 		return err
 	}
 
-	if err := r.registerPlugin(base); err != nil {
-		return err
-	}
+	/*
+		if err := r.registerPlugin(base); err != nil {
+			return err
+		}
+	*/
 
 	r.backendPluginManager = backendPluginManager
 
@@ -43,7 +45,7 @@ func (r *RendererPlugin) Load(decoder *json.Decoder, base *PluginBase, backendPl
 		return errutil.Wrapf(err, "Failed to register backend plugin")
 	}
 
-	Renderer = r
+	//Renderer = r
 	return nil
 }
 

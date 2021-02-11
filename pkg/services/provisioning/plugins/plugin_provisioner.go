@@ -6,12 +6,13 @@ import (
 	"github.com/grafana/grafana/pkg/bus"
 	"github.com/grafana/grafana/pkg/infra/log"
 	"github.com/grafana/grafana/pkg/models"
+	"github.com/grafana/grafana/pkg/plugins/manager"
 )
 
 // Provision scans a directory for provisioning config files
 // and provisions the app in those files.
-func Provision(configDirectory string) error {
-	ap := newAppProvisioner(log.New("provisioning.plugins"))
+func Provision(configDirectory string, pm *manager.PluginManager) error {
+	ap := newAppProvisioner(log.New("provisioning.plugins"), pm)
 	return ap.applyChanges(configDirectory)
 }
 
@@ -22,10 +23,10 @@ type PluginProvisioner struct {
 	cfgProvider configReader
 }
 
-func newAppProvisioner(log log.Logger) PluginProvisioner {
+func newAppProvisioner(log log.Logger, pm *manager.PluginManager) PluginProvisioner {
 	return PluginProvisioner{
 		log:         log,
-		cfgProvider: newConfigReader(log),
+		cfgProvider: newConfigReader(log, pm),
 	}
 }
 

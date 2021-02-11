@@ -1,11 +1,10 @@
-package plugins
+package manager
 
 import (
 	"encoding/json"
 	"fmt"
 	"regexp"
 
-	"github.com/grafana/grafana/pkg/bus"
 	"github.com/grafana/grafana/pkg/components/simplejson"
 	"github.com/grafana/grafana/pkg/models"
 	"github.com/grafana/grafana/pkg/services/dashboards"
@@ -41,16 +40,11 @@ func (e DashboardInputMissingError) Error() string {
 	return fmt.Sprintf("Dashboard input variable: %v missing from import command", e.VariableName)
 }
 
-func init() {
-	bus.AddHandler("plugins", ImportDashboard)
-}
-
-func ImportDashboard(cmd *ImportDashboardCommand) error {
+func (pm *PluginManager) ImportDashboard(cmd *ImportDashboardCommand) error {
 	var dashboard *models.Dashboard
-	var err error
-
 	if cmd.PluginId != "" {
-		if dashboard, err = loadPluginDashboard(cmd.PluginId, cmd.Path); err != nil {
+		var err error
+		if dashboard, err = pm.loadPluginDashboard(cmd.PluginId, cmd.Path); err != nil {
 			return err
 		}
 	} else {
@@ -84,7 +78,6 @@ func ImportDashboard(cmd *ImportDashboardCommand) error {
 	}
 
 	savedDash, err := dashboards.NewService().ImportDashboard(dto)
-
 	if err != nil {
 		return err
 	}

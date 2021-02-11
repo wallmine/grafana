@@ -1,4 +1,4 @@
-package plugins
+package manager
 
 import (
 	"encoding/json"
@@ -16,12 +16,12 @@ var (
 	httpClient = http.Client{Timeout: 10 * time.Second}
 )
 
-type GrafanaNetPlugin struct {
+type grafanaNetPlugin struct {
 	Slug    string `json:"slug"`
 	Version string `json:"version"`
 }
 
-type GithubLatest struct {
+type gitHubLatest struct {
 	Stable  string `json:"stable"`
 	Testing string `json:"testing"`
 }
@@ -64,7 +64,7 @@ func (pm *PluginManager) checkForUpdates() {
 		return
 	}
 
-	gNetPlugins := []GrafanaNetPlugin{}
+	gNetPlugins := []grafanaNetPlugin{}
 	err = json.Unmarshal(body, &gNetPlugins)
 	if err != nil {
 		log.Tracef("Failed to unmarshal plugin repo, reading response from grafana.com, %v", err.Error())

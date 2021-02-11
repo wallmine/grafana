@@ -16,6 +16,7 @@ import (
 	"github.com/grafana/grafana/pkg/services/search"
 	"github.com/grafana/grafana/pkg/services/shorturls"
 	"github.com/grafana/grafana/pkg/services/sqlstore"
+	"github.com/grafana/grafana/pkg/tsdb"
 
 	"github.com/grafana/grafana/pkg/plugins/backendplugin"
 
@@ -82,6 +83,7 @@ type HTTPServer struct {
 	ContextHandler         *contexthandler.ContextHandler     `inject:""`
 	SQLStore               *sqlstore.SQLStore                 `inject:""`
 	LibraryPanelService    *librarypanels.LibraryPanelService `inject:""`
+	TSDBService            *tsdb.Service                      `inject:""`
 	Listener               net.Listener
 }
 
