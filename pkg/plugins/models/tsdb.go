@@ -45,9 +45,9 @@ type tsdbTableColumn struct {
 	Text string `json:"text"`
 }
 
-type tsdbTimePoint [2]null.Float
-type tsdbTimeSeriesPoints []tsdbTimePoint
-type tsdbTimeSeriesSlice []tsdbTimeSeries
+type TSDBTimePoint [2]null.Float
+type tsdbTimeSeriesPoints []TSDBTimePoint
+type tsdbTimeSeriesSlice []TSDBTimeSeries
 type tsdbRowValues []interface{}
 
 type TSDBQueryResult struct {
@@ -60,7 +60,7 @@ type TSDBQueryResult struct {
 	Dataframes  DataFrames          `json:"dataframes"`
 }
 
-type tsdbTimeSeries struct {
+type TSDBTimeSeries struct {
 	Name   string               `json:"name"`
 	Points tsdbTimeSeriesPoints `json:"points"`
 	Tags   map[string]string    `json:"tags,omitempty"`

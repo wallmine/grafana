@@ -3,21 +3,23 @@ package dtos
 import (
 	"github.com/grafana/grafana/pkg/components/simplejson"
 	"github.com/grafana/grafana/pkg/plugins"
+	"github.com/grafana/grafana/pkg/plugins/manager"
+	"github.com/grafana/grafana/pkg/plugins/models"
 )
 
 type PluginSetting struct {
-	Name          string                      `json:"name"`
-	Type          string                      `json:"type"`
-	Id            string                      `json:"id"`
-	Enabled       bool                        `json:"enabled"`
-	Pinned        bool                        `json:"pinned"`
-	Module        string                      `json:"module"`
-	BaseUrl       string                      `json:"baseUrl"`
-	Info          *plugins.PluginInfo         `json:"info"`
-	Includes      []*plugins.PluginInclude    `json:"includes"`
-	Dependencies  *plugins.PluginDependencies `json:"dependencies"`
-	JsonData      map[string]interface{}      `json:"jsonData"`
-	DefaultNavUrl string                      `json:"defaultNavUrl"`
+	Name          string                     `json:"name"`
+	Type          string                     `json:"type"`
+	Id            string                     `json:"id"`
+	Enabled       bool                       `json:"enabled"`
+	Pinned        bool                       `json:"pinned"`
+	Module        string                     `json:"module"`
+	BaseUrl       string                     `json:"baseUrl"`
+	Info          *models.PluginInfo         `json:"info"`
+	Includes      []*models.PluginInclude    `json:"includes"`
+	Dependencies  *models.PluginDependencies `json:"dependencies"`
+	JsonData      map[string]interface{}     `json:"jsonData"`
+	DefaultNavUrl string                     `json:"defaultNavUrl"`
 
 	LatestVersion string                        `json:"latestVersion"`
 	HasUpdate     bool                          `json:"hasUpdate"`
@@ -33,7 +35,7 @@ type PluginListItem struct {
 	Id            string                        `json:"id"`
 	Enabled       bool                          `json:"enabled"`
 	Pinned        bool                          `json:"pinned"`
-	Info          *plugins.PluginInfo           `json:"info"`
+	Info          *models.PluginInfo            `json:"info"`
 	LatestVersion string                        `json:"latestVersion"`
 	HasUpdate     bool                          `json:"hasUpdate"`
 	DefaultNavUrl string                        `json:"defaultNavUrl"`
@@ -63,6 +65,6 @@ type ImportDashboardCommand struct {
 	Path      string                         `json:"path"`
 	Overwrite bool                           `json:"overwrite"`
 	Dashboard *simplejson.Json               `json:"dashboard"`
-	Inputs    []plugins.ImportDashboardInput `json:"inputs"`
+	Inputs    []manager.ImportDashboardInput `json:"inputs"`
 	FolderId  int64                          `json:"folderId"`
 }

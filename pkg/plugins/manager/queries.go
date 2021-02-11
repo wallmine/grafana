@@ -2,6 +2,7 @@ package manager
 
 import (
 	"github.com/grafana/grafana/pkg/models"
+	pluginmodels "github.com/grafana/grafana/pkg/plugins/models"
 )
 
 func (pm *PluginManager) GetPluginSettings(orgID int64) (map[string]*models.PluginSettingInfoDTO, error) {
@@ -15,7 +16,7 @@ func (pm *PluginManager) GetPluginSettings(orgID int64) (map[string]*models.Plug
 		pluginMap[plug.PluginId] = plug
 	}
 
-	for _, pluginDef := range Plugins {
+	for _, pluginDef := range pm.Plugins {
 		// ignore entries that exists
 		if _, ok := pluginMap[pluginDef.Id]; ok {
 			continue
@@ -24,12 +25,12 @@ func (pm *PluginManager) GetPluginSettings(orgID int64) (map[string]*models.Plug
 		// default to enabled true
 		opt := &models.PluginSettingInfoDTO{
 			PluginId: pluginDef.Id,
-			OrgId:    orgId,
+			OrgId:    orgID,
 			Enabled:  true,
 		}
 
 		// apps are disabled by default
-		if pluginDef.Type == PluginTypeApp {
+		if pluginDef.Type == pluginmodels.PluginTypeApp {
 			opt.Enabled = false
 		}
 
@@ -50,7 +51,7 @@ func (pm *PluginManager) GetPluginSettings(orgID int64) (map[string]*models.Plug
 }
 
 // IsAppInstalled checks if an app plugin with provided plugin ID is installed.
-func IsAppInstalled(pluginID string) bool {
-	_, exists := Apps[pluginID]
+func (pm *PluginManager) IsAppInstalled(pluginID string) bool {
+	_, exists := pm.Apps[pluginID]
 	return exists
 }

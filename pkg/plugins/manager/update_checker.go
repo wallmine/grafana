@@ -26,9 +26,9 @@ type gitHubLatest struct {
 	Testing string `json:"testing"`
 }
 
-func getAllExternalPluginSlugs() string {
+func (pm *PluginManager) getAllExternalPluginSlugs() string {
 	var result []string
-	for _, plug := range Plugins {
+	for _, plug := range pm.Plugins {
 		if plug.IsCorePlugin {
 			continue
 		}
@@ -40,13 +40,13 @@ func getAllExternalPluginSlugs() string {
 }
 
 func (pm *PluginManager) checkForUpdates() {
-	if !setting.CheckForUpdates {
+	if !pm.Cfg.CheckForUpdates {
 		return
 	}
 
 	pm.log.Debug("Checking for updates")
 
-	pluginSlugs := getAllExternalPluginSlugs()
+	pluginSlugs := pm.getAllExternalPluginSlugs()
 	resp, err := httpClient.Get("https://grafana.com/api/plugins/versioncheck?slugIn=" + pluginSlugs + "&grafanaVersion=" + setting.BuildVersion)
 	if err != nil {
 		log.Tracef("Failed to get plugins repo from grafana.com, %v", err.Error())
@@ -71,7 +71,7 @@ func (pm *PluginManager) checkForUpdates() {
 		return
 	}
 
-	for _, plug := range Plugins {
+	for _, plug := range pm.Plugins {
 		for _, gplug := range gNetPlugins {
 			if gplug.Slug == plug.Id {
 				plug.GrafanaNetVersion = gplug.Version
@@ -104,19 +104,19 @@ func (pm *PluginManager) checkForUpdates() {
 		return
 	}
 
-	var githubLatest GithubLatest
-	err = json.Unmarshal(body, &githubLatest)
+	var latest gitHubLatest
+	err = json.Unmarshal(body, &latest)
 	if err != nil {
 		log.Tracef("Failed to unmarshal github.com latest, reading response from github.com: %v", err.Error())
 		return
 	}
 
 	if strings.Contains(setting.BuildVersion, "-") {
-		pm.GrafanaLatestVersion = githubLatest.Testing
-		pm.GrafanaHasUpdate = !strings.HasPrefix(setting.BuildVersion, githubLatest.Testing)
+		pm.GrafanaLatestVersion = latest.Testing
+		pm.GrafanaHasUpdate = !strings.HasPrefix(setting.BuildVersion, latest.Testing)
 	} else {
-		pm.GrafanaLatestVersion = githubLatest.Stable
-		pm.GrafanaHasUpdate = githubLatest.Stable != setting.BuildVersion
+		pm.GrafanaLatestVersion = latest.Stable
+		pm.GrafanaHasUpdate = latest.Stable != setting.BuildVersion
 	}
 
 	currVersion, err1 := version.NewVersion(setting.BuildVersion)

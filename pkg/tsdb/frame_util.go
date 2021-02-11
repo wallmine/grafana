@@ -4,10 +4,11 @@ import (
 	"time"
 
 	"github.com/grafana/grafana-plugin-sdk-go/data"
+	"github.com/grafana/grafana/pkg/plugins/models"
 )
 
-// SeriesToFrame converts a TimeSeries to a sdk Frame
-func SeriesToFrame(series *TimeSeries) (*data.Frame, error) {
+// SeriesToFrame converts a models.TSDBTimeSeries to an SDK frame.
+func SeriesToFrame(series *models.TSDBTimeSeries) (*data.Frame, error) {
 	timeVec := make([]*time.Time, len(series.Points))
 	floatVec := make([]*float64, len(series.Points))
 	for idx, point := range series.Points {
@@ -21,9 +22,9 @@ func SeriesToFrame(series *TimeSeries) (*data.Frame, error) {
 	return frame, nil
 }
 
-// convertTSDBTimePoint coverts a tsdb.TimePoint into two values appropriate
+// convertTSDBTimePoint converts a models.TSDBTimePoint into two values appropriate
 // for Series values.
-func convertTSDBTimePoint(point TimePoint) (t *time.Time, f *float64) {
+func convertTSDBTimePoint(point models.TSDBTimePoint) (t *time.Time, f *float64) {
 	timeIdx, valueIdx := 1, 0
 	if point[timeIdx].Valid { // Assuming valid is null?
 		tI := int64(point[timeIdx].Float64)

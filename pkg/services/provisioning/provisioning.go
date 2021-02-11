@@ -28,9 +28,7 @@ func init() {
 	registry.Register(&registry.Descriptor{
 		Name: "ProvisioningService",
 		Instance: NewProvisioningServiceImpl(
-			func(path string) (dashboards.DashboardProvisioner, error) {
-				return dashboards.New(path)
-			},
+			dashboards.New,
 			notifiers.Provision,
 			datasources.Provision,
 			plugins.Provision,

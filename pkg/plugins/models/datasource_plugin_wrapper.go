@@ -72,7 +72,7 @@ func (tw *DatasourcePluginWrapper) Query(ctx context.Context, ds *models.DataSou
 	for _, r := range pbres.Results {
 		qr := TSDBQueryResult{
 			RefID:  r.RefId,
-			Series: []tsdbTimeSeries{},
+			Series: []TSDBTimeSeries{},
 			Tables: []tsdbTable{},
 		}
 
@@ -93,11 +93,11 @@ func (tw *DatasourcePluginWrapper) Query(ctx context.Context, ds *models.DataSou
 			points := tsdbTimeSeriesPoints{}
 
 			for _, p := range s.Points {
-				po := tsdbTimePoint{null.FloatFrom(p.Value), null.FloatFrom(float64(p.Timestamp))}
+				po := TSDBTimePoint{null.FloatFrom(p.Value), null.FloatFrom(float64(p.Timestamp))}
 				points = append(points, po)
 			}
 
-			qr.Series = append(qr.Series, tsdbTimeSeries{
+			qr.Series = append(qr.Series, TSDBTimeSeries{
 				Name:   s.Name,
 				Tags:   s.Tags,
 				Points: points,
