@@ -73,7 +73,7 @@ func (tw *DatasourcePluginWrapper) Query(ctx context.Context, ds *models.DataSou
 		qr := TSDBQueryResult{
 			RefID:  r.RefId,
 			Series: []TSDBTimeSeries{},
-			Tables: []tsdbTable{},
+			Tables: []TSDBTable{},
 		}
 
 		if r.Error != "" {
@@ -116,8 +116,8 @@ func (tw *DatasourcePluginWrapper) Query(ctx context.Context, ds *models.DataSou
 	return res, nil
 }
 
-func (tw *DatasourcePluginWrapper) mapTables(r *datasource.QueryResult) ([]tsdbTable, error) {
-	var tables []tsdbTable
+func (tw *DatasourcePluginWrapper) mapTables(r *datasource.QueryResult) ([]TSDBTable, error) {
+	var tables []TSDBTable
 	for _, t := range r.GetTables() {
 		mappedTable, err := tw.mapTable(t)
 		if err != nil {
@@ -128,17 +128,17 @@ func (tw *DatasourcePluginWrapper) mapTables(r *datasource.QueryResult) ([]tsdbT
 	return tables, nil
 }
 
-func (tw *DatasourcePluginWrapper) mapTable(t *datasource.Table) (tsdbTable, error) {
-	table := tsdbTable{}
+func (tw *DatasourcePluginWrapper) mapTable(t *datasource.Table) (TSDBTable, error) {
+	table := TSDBTable{}
 	for _, c := range t.GetColumns() {
-		table.Columns = append(table.Columns, tsdbTableColumn{
+		table.Columns = append(table.Columns, TSDBTableColumn{
 			Text: c.Name,
 		})
 	}
 
-	table.Rows = make([]tsdbRowValues, 0)
+	table.Rows = make([]TSDBRowValues, 0)
 	for _, r := range t.GetRows() {
-		row := tsdbRowValues{}
+		row := TSDBRowValues{}
 		for _, rv := range r.Values {
 			mappedRw, err := tw.mapRowValue(rv)
 			if err != nil {

@@ -35,13 +35,15 @@ type CalculatorOptions struct {
 	MinInterval time.Duration
 }
 
-func NewCalculator(opts CalculatorOptions) *intervalCalculator {
+func NewCalculator(opts ...CalculatorOptions) *intervalCalculator {
 	calc := &intervalCalculator{}
 
-	if opts.MinInterval == 0 {
-		calc.minInterval = defaultMinInterval
-	} else {
-		calc.minInterval = opts.MinInterval
+	for _, o := range opts {
+		if o.MinInterval == 0 {
+			calc.minInterval = defaultMinInterval
+		} else {
+			calc.minInterval = o.MinInterval
+		}
 	}
 
 	return calc

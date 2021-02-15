@@ -36,19 +36,19 @@ type TSDBTimeRange struct {
 	now  time.Time
 }
 
-type tsdbTable struct {
-	Columns []tsdbTableColumn `json:"columns"`
-	Rows    []tsdbRowValues   `json:"rows"`
+type TSDBTable struct {
+	Columns []TSDBTableColumn `json:"columns"`
+	Rows    []TSDBRowValues   `json:"rows"`
 }
 
-type tsdbTableColumn struct {
+type TSDBTableColumn struct {
 	Text string `json:"text"`
 }
 
 type TSDBTimePoint [2]null.Float
 type TSDBTimeSeriesPoints []TSDBTimePoint
 type TSDBTimeSeriesSlice []TSDBTimeSeries
-type tsdbRowValues []interface{}
+type TSDBRowValues []interface{}
 
 type TSDBQueryResult struct {
 	Error       error               `json:"-"`
@@ -56,7 +56,7 @@ type TSDBQueryResult struct {
 	RefID       string              `json:"refId"`
 	Meta        *simplejson.Json    `json:"meta,omitempty"`
 	Series      TSDBTimeSeriesSlice `json:"series"`
-	Tables      []tsdbTable         `json:"tables"`
+	Tables      []TSDBTable         `json:"tables"`
 	Dataframes  DataFrames          `json:"dataframes"`
 }
 

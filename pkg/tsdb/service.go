@@ -11,6 +11,7 @@ import (
 	"github.com/grafana/grafana/pkg/setting"
 	"github.com/grafana/grafana/pkg/tsdb/graphite"
 	"github.com/grafana/grafana/pkg/tsdb/influxdb"
+	"github.com/grafana/grafana/pkg/tsdb/mssql"
 	"github.com/grafana/grafana/pkg/tsdb/opentsdb"
 	"github.com/grafana/grafana/pkg/tsdb/prometheus"
 )
@@ -44,6 +45,7 @@ func (s *Service) Init() error {
 	s.registry["opentsdb"] = opentsdb.NewExecutor
 	s.registry["prometheus"] = prometheus.NewExecutor
 	s.registry["influxdb"] = influxdb.NewExecutor
+	s.registry["mssql"] = mssql.NewExecutor
 	return nil
 }
 
