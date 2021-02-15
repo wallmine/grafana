@@ -9,10 +9,13 @@ import (
 	pluginmodels "github.com/grafana/grafana/pkg/plugins/models"
 	"github.com/grafana/grafana/pkg/registry"
 	"github.com/grafana/grafana/pkg/setting"
+	"github.com/grafana/grafana/pkg/tsdb/elasticsearch"
 	"github.com/grafana/grafana/pkg/tsdb/graphite"
 	"github.com/grafana/grafana/pkg/tsdb/influxdb"
 	"github.com/grafana/grafana/pkg/tsdb/mssql"
+	"github.com/grafana/grafana/pkg/tsdb/mysql"
 	"github.com/grafana/grafana/pkg/tsdb/opentsdb"
+	"github.com/grafana/grafana/pkg/tsdb/postgres"
 	"github.com/grafana/grafana/pkg/tsdb/prometheus"
 )
 
@@ -46,6 +49,9 @@ func (s *Service) Init() error {
 	s.registry["prometheus"] = prometheus.NewExecutor
 	s.registry["influxdb"] = influxdb.NewExecutor
 	s.registry["mssql"] = mssql.NewExecutor
+	s.registry["postgres"] = postgres.NewExecutor
+	s.registry["mysql"] = mysql.NewExecutor
+	s.registry["elasticsearch"] = elasticsearch.NewExecutor
 	return nil
 }
 

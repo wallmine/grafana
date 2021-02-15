@@ -8,16 +8,17 @@ import (
 	"github.com/aws/aws-sdk-go/aws"
 	"github.com/aws/aws-sdk-go/service/cloudwatch"
 	"github.com/grafana/grafana/pkg/components/simplejson"
-	"github.com/grafana/grafana/pkg/tsdb"
+	pluginmodels "github.com/grafana/grafana/pkg/plugins/models"
 	"github.com/grafana/grafana/pkg/util/errutil"
 )
 
-func (e *cloudWatchExecutor) executeAnnotationQuery(ctx context.Context, queryContext *tsdb.TsdbQuery) (*tsdb.Response, error) {
-	result := &tsdb.Response{
-		Results: make(map[string]*tsdb.QueryResult),
+func (e *cloudWatchExecutor) executeAnnotationQuery(ctx context.Context, queryContext pluginmodels.TSDBQuery) (
+	pluginmodels.TSDBResponse, error) {
+	result := pluginmodels.TSDBResponse{
+		Results: make(map[string]pluginmodels.TSDBQueryResult),
 	}
 	firstQuery := queryContext.Queries[0]
-	queryResult := &tsdb.QueryResult{Meta: simplejson.New(), RefId: firstQuery.RefId}
+	queryResult := pluginmodels.TSDBQueryResult{Meta: simplejson.New(), RefId: firstQuery.RefId}
 
 	parameters := firstQuery.Model
 	usePrefixMatch := parameters.Get("prefixMatching").MustBool(false)
@@ -125,10 +126,10 @@ func (e *cloudWatchExecutor) executeAnnotationQuery(ctx context.Context, queryCo
 	return result, err
 }
 
-func transformAnnotationToTable(data []map[string]string, result *tsdb.QueryResult) {
-	table := &tsdb.Table{
-		Columns: make([]tsdb.TableColumn, 4),
-		Rows:    make([]tsdb.RowValues, 0),
+func transformAnnotationToTable(data []map[string]string, result pluginmodels.TSDBQueryResult) {
+	table := pluginmodels.TSDBTable{
+		Columns: make([]pluginmodels.TSDBTableColumn, 4),
+		Rows:    make([]pluginmodels.TSDBRowValues, 0),
 	}
 	table.Columns[0].Text = "time"
 	table.Columns[1].Text = "title"
@@ -147,7 +148,8 @@ func transformAnnotationToTable(data []map[string]string, result *tsdb.QueryResu
 	result.Meta.Set("rowCount", len(data))
 }
 
-func filterAlarms(alarms *cloudwatch.DescribeAlarmsOutput, namespace string, metricName string, dimensions map[string]interface{}, statistics []string, period int64) []*string {
+func filterAlarms(alarms *cloudwatch.DescribeAlarmsOutput, namespace string, metricName string,
+	dimensions map[string]interface{}, statistics []string, period int64) []*string {
 	alarmNames := make([]*string, 0)
 
 	for _, alarm := range alarms.MetricAlarms {
