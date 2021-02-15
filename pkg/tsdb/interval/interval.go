@@ -1,4 +1,4 @@
-package tsdb
+package interval
 
 import (
 	"fmt"
@@ -8,6 +8,7 @@ import (
 
 	"github.com/grafana/grafana/pkg/components/simplejson"
 	"github.com/grafana/grafana/pkg/models"
+	pluginmodels "github.com/grafana/grafana/pkg/plugins/models"
 )
 
 var (
@@ -26,25 +27,21 @@ type intervalCalculator struct {
 	minInterval time.Duration
 }
 
-type IntervalCalculator interface {
-	Calculate(timeRange *TimeRange, minInterval time.Duration) Interval
+type Calculator interface {
+	Calculate(timeRange pluginmodels.TSDBTimeRange, minInterval time.Duration) Interval
 }
 
-type IntervalOptions struct {
+type CalculatorOptions struct {
 	MinInterval time.Duration
 }
 
-func NewIntervalCalculator(opt *IntervalOptions) *intervalCalculator {
-	if opt == nil {
-		opt = &IntervalOptions{}
-	}
-
+func NewCalculator(opts CalculatorOptions) *intervalCalculator {
 	calc := &intervalCalculator{}
 
-	if opt.MinInterval == 0 {
+	if opts.MinInterval == 0 {
 		calc.minInterval = defaultMinInterval
 	} else {
-		calc.minInterval = opt.MinInterval
+		calc.minInterval = opts.MinInterval
 	}
 
 	return calc
@@ -54,7 +51,7 @@ func (i *Interval) Milliseconds() int64 {
 	return i.Value.Nanoseconds() / int64(time.Millisecond)
 }
 
-func (ic *intervalCalculator) Calculate(timerange *TimeRange, minInterval time.Duration) Interval {
+func (ic *intervalCalculator) Calculate(timerange pluginmodels.TSDBTimeRange, minInterval time.Duration) Interval {
 	to := timerange.MustGetTo().UnixNano()
 	from := timerange.MustGetFrom().UnixNano()
 	interval := time.Duration((to - from) / defaultRes)

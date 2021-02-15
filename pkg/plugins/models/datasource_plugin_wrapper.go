@@ -90,7 +90,7 @@ func (tw *DatasourcePluginWrapper) Query(ctx context.Context, ds *models.DataSou
 		}
 
 		for _, s := range r.GetSeries() {
-			points := tsdbTimeSeriesPoints{}
+			points := TSDBTimeSeriesPoints{}
 
 			for _, p := range s.Points {
 				po := TSDBTimePoint{null.FloatFrom(p.Value), null.FloatFrom(float64(p.Timestamp))}
