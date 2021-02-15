@@ -9,6 +9,7 @@ import (
 	pluginmodels "github.com/grafana/grafana/pkg/plugins/models"
 	"github.com/grafana/grafana/pkg/registry"
 	"github.com/grafana/grafana/pkg/setting"
+	"github.com/grafana/grafana/pkg/tsdb/cloudwatch"
 	"github.com/grafana/grafana/pkg/tsdb/elasticsearch"
 	"github.com/grafana/grafana/pkg/tsdb/graphite"
 	"github.com/grafana/grafana/pkg/tsdb/influxdb"
@@ -36,8 +37,9 @@ type GetTSDBQueryEndpointFn func(ds *models.DataSource) (TSDBQueryEndpoint, erro
 
 // Service handles requests to TSDB data sources.
 type Service struct {
-	Cfg           *setting.Cfg          `inject:""`
-	PluginManager manager.PluginManager `inject:""`
+	Cfg               *setting.Cfg                  `inject:""`
+	PluginManager     manager.PluginManager         `inject:""`
+	CloudWatchService *cloudwatch.CloudWatchService `inject:""`
 
 	registry map[string]func(*models.DataSource) (pluginmodels.TSDBPlugin, error)
 }
@@ -52,6 +54,7 @@ func (s *Service) Init() error {
 	s.registry["postgres"] = postgres.NewExecutor
 	s.registry["mysql"] = mysql.NewExecutor
 	s.registry["elasticsearch"] = elasticsearch.NewExecutor
+	s.registry["cloudwatch"] = s.CloudWatchService.NewExecutor
 	return nil
 }
 

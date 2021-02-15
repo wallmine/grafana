@@ -18,7 +18,7 @@ func (e *cloudWatchExecutor) executeAnnotationQuery(ctx context.Context, queryCo
 		Results: make(map[string]pluginmodels.TSDBQueryResult),
 	}
 	firstQuery := queryContext.Queries[0]
-	queryResult := pluginmodels.TSDBQueryResult{Meta: simplejson.New(), RefId: firstQuery.RefId}
+	queryResult := pluginmodels.TSDBQueryResult{Meta: simplejson.New(), RefID: firstQuery.RefID}
 
 	parameters := firstQuery.Model
 	usePrefixMatch := parameters.Get("prefixMatching").MustBool(false)
@@ -28,7 +28,7 @@ func (e *cloudWatchExecutor) executeAnnotationQuery(ctx context.Context, queryCo
 	dimensions := parameters.Get("dimensions").MustMap()
 	statistics, err := parseStatistics(parameters)
 	if err != nil {
-		return nil, err
+		return pluginmodels.TSDBResponse{}, err
 	}
 	period := int64(parameters.Get("period").MustInt(0))
 	if period == 0 && !usePrefixMatch {
@@ -39,7 +39,7 @@ func (e *cloudWatchExecutor) executeAnnotationQuery(ctx context.Context, queryCo
 
 	cli, err := e.getCWClient(region)
 	if err != nil {
-		return nil, err
+		return pluginmodels.TSDBResponse{}, err
 	}
 
 	var alarmNames []*string
@@ -51,7 +51,7 @@ func (e *cloudWatchExecutor) executeAnnotationQuery(ctx context.Context, queryCo
 		}
 		resp, err := cli.DescribeAlarms(params)
 		if err != nil {
-			return nil, errutil.Wrap("failed to call cloudwatch:DescribeAlarms", err)
+			return pluginmodels.TSDBResponse{}, errutil.Wrap("failed to call cloudwatch:DescribeAlarms", err)
 		}
 		alarmNames = filterAlarms(resp, namespace, metricName, dimensions, statistics, period)
 	} else {
@@ -82,7 +82,7 @@ func (e *cloudWatchExecutor) executeAnnotationQuery(ctx context.Context, queryCo
 			}
 			resp, err := cli.DescribeAlarmsForMetric(params)
 			if err != nil {
-				return nil, errutil.Wrap("failed to call cloudwatch:DescribeAlarmsForMetric", err)
+				return pluginmodels.TSDBResponse{}, errutil.Wrap("failed to call cloudwatch:DescribeAlarmsForMetric", err)
 			}
 			for _, alarm := range resp.MetricAlarms {
 				alarmNames = append(alarmNames, alarm.AlarmName)
@@ -92,11 +92,11 @@ func (e *cloudWatchExecutor) executeAnnotationQuery(ctx context.Context, queryCo
 
 	startTime, err := queryContext.TimeRange.ParseFrom()
 	if err != nil {
-		return nil, err
+		return pluginmodels.TSDBResponse{}, err
 	}
 	endTime, err := queryContext.TimeRange.ParseTo()
 	if err != nil {
-		return nil, err
+		return pluginmodels.TSDBResponse{}, err
 	}
 
 	annotations := make([]map[string]string, 0)
@@ -109,7 +109,7 @@ func (e *cloudWatchExecutor) executeAnnotationQuery(ctx context.Context, queryCo
 		}
 		resp, err := cli.DescribeAlarmHistory(params)
 		if err != nil {
-			return nil, errutil.Wrap("failed to call cloudwatch:DescribeAlarmHistory", err)
+			return pluginmodels.TSDBResponse{}, errutil.Wrap("failed to call cloudwatch:DescribeAlarmHistory", err)
 		}
 		for _, history := range resp.AlarmHistoryItems {
 			annotation := make(map[string]string)
@@ -122,8 +122,8 @@ func (e *cloudWatchExecutor) executeAnnotationQuery(ctx context.Context, queryCo
 	}
 
 	transformAnnotationToTable(annotations, queryResult)
-	result.Results[firstQuery.RefId] = queryResult
-	return result, err
+	result.Results[firstQuery.RefID] = queryResult
+	return result, nil
 }
 
 func transformAnnotationToTable(data []map[string]string, result pluginmodels.TSDBQueryResult) {
