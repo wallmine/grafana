@@ -10,6 +10,7 @@ import (
 	"github.com/grafana/grafana/pkg/bus"
 	"github.com/grafana/grafana/pkg/components/simplejson"
 	"github.com/grafana/grafana/pkg/models"
+	"github.com/grafana/grafana/pkg/tsdb"
 )
 
 var (
@@ -113,7 +114,7 @@ func getTimeDurationStringToSeconds(str string) (int64, error) {
 
 // NewRuleFromDBAlert maps a db version of
 // alert to an in-memory version.
-func NewRuleFromDBAlert(ruleDef *models.Alert, logTranslationFailures bool) (*Rule, error) {
+func NewRuleFromDBAlert(ruleDef *models.Alert, logTranslationFailures bool, tsdbService *tsdb.Service) (*Rule, error) {
 	model := &Rule{}
 	model.ID = ruleDef.Id
 	model.OrgID = ruleDef.OrgId
@@ -165,7 +166,7 @@ func NewRuleFromDBAlert(ruleDef *models.Alert, logTranslationFailures bool) (*Ru
 		if !exist {
 			return nil, ValidationError{Reason: "Unknown alert condition: " + conditionType, DashboardID: model.DashboardID, AlertID: model.ID, PanelID: model.PanelID}
 		}
-		queryCondition, err := factory(conditionModel, index)
+		queryCondition, err := factory(conditionModel, index, tsdbService)
 		if err != nil {
 			return nil, ValidationError{Err: err, DashboardID: model.DashboardID, AlertID: model.ID, PanelID: model.PanelID}
 		}
@@ -202,7 +203,7 @@ func getAlertNotificationUIDByIDAndOrgID(notificationID int64, orgID int64) (str
 }
 
 // ConditionFactory is the function signature for creating `Conditions`.
-type ConditionFactory func(model *simplejson.Json, index int) (Condition, error)
+type ConditionFactory func(model *simplejson.Json, index int, service *tsdb.Service) (Condition, error)
 
 var conditionFactories = make(map[string]ConditionFactory)
 

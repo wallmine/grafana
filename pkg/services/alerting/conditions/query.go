@@ -47,10 +47,10 @@ type AlertQuery struct {
 }
 
 // Eval evaluates the `QueryCondition`.
-func (c *QueryCondition) Eval(context *alerting.EvalContext) (*alerting.ConditionResult, error) {
+func (c *QueryCondition) Eval(context *alerting.EvalContext, tsdbService *tsdb.Service) (*alerting.ConditionResult, error) {
 	timeRange := pluginmodels.NewTSDBTimeRange(c.Query.From, c.Query.To)
 
-	seriesList, err := c.executeQuery(context, timeRange)
+	seriesList, err := c.executeQuery(context, timeRange, tsdbService)
 	if err != nil {
 		return nil, err
 	}
@@ -109,7 +109,8 @@ func (c *QueryCondition) Eval(context *alerting.EvalContext) (*alerting.Conditio
 	}, nil
 }
 
-func (c *QueryCondition) executeQuery(context *alerting.EvalContext, timeRange pluginmodels.TSDBTimeRange) (
+func (c *QueryCondition) executeQuery(context *alerting.EvalContext, timeRange pluginmodels.TSDBTimeRange,
+	tsdbService *tsdb.Service) (
 	pluginmodels.TSDBTimeSeriesSlice, error) {
 	getDsInfo := &models.GetDataSourceQuery{
 		Id:    c.Query.DatasourceID,
@@ -165,14 +166,14 @@ func (c *QueryCondition) executeQuery(context *alerting.EvalContext, timeRange p
 		})
 	}
 
-	resp, err := c.HandleRequest(context.Ctx, getDsInfo.Result, req)
+	resp, err := tsdbService.HandleRequest(context.Ctx, getDsInfo.Result, req)
 	if err != nil {
 		return nil, toCustomError(err)
 	}
 
 	for _, v := range resp.Results {
 		if v.Error != nil {
-			return nil, fmt.Errorf("tsdb.HandleRequest() response error %v", v)
+			return nil, fmt.Errorf("tsdbService.HandleRequest() response error %v", v)
 		}
 
 		// If there are dataframes but no series on the result
@@ -181,14 +182,14 @@ func (c *QueryCondition) executeQuery(context *alerting.EvalContext, timeRange p
 		if useDataframes { // convert the dataframes to time series
 			frames, err := v.Dataframes.Decoded()
 			if err != nil {
-				return nil, errutil.Wrap("tsdb.HandleRequest() failed to unmarshal arrow dataframes from bytes", err)
+				return nil, errutil.Wrap("tsdbService.HandleRequest() failed to unmarshal arrow dataframes from bytes", err)
 			}
 
 			for _, frame := range frames {
 				ss, err := FrameToSeriesSlice(frame)
 				if err != nil {
 					return nil, errutil.Wrapf(err,
-						`tsdb.HandleRequest() failed to convert dataframe "%v" to pluginmodels.TSDBTimeSeriesSlice`,
+						`tsdbService.HandleRequest() failed to convert dataframe "%v" to pluginmodels.TSDBTimeSeriesSlice`,
 						frame.Name)
 				}
 				result = append(result, ss...)
@@ -246,7 +247,6 @@ func (c *QueryCondition) getRequestForAlertRule(datasource *models.DataSource, t
 func newQueryCondition(model *simplejson.Json, index int) (*QueryCondition, error) {
 	condition := QueryCondition{}
 	condition.Index = index
-	condition.HandleRequest = tsdb.HandleRequest
 
 	queryJSON := model.Get("query")
 
@@ -386,5 +386,5 @@ func toCustomError(err error) error {
 	}
 
 	// generic fallback
-	return fmt.Errorf("tsdb.HandleRequest() error %v", err)
+	return fmt.Errorf("tsdbService.HandleRequest() error %v", err)
 }

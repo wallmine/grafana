@@ -67,7 +67,8 @@ func copyJSON(in json.Marshaler) (*simplejson.Json, error) {
 	return simplejson.NewJson(rawJSON)
 }
 
-func (e *DashAlertExtractor) getAlertFromPanels(jsonWithPanels *simplejson.Json, validateAlertFunc func(*models.Alert) bool, logTranslationFailures bool) ([]*models.Alert, error) {
+func (e *DashAlertExtractor) getAlertFromPanels(jsonWithPanels *simplejson.Json,
+	validateAlertFunc func(*models.Alert) bool, logTranslationFailures bool) ([]*models.Alert, error) {
 	alerts := make([]*models.Alert, 0)
 
 	for _, panelObj := range jsonWithPanels.Get("panels").MustArray() {
@@ -181,7 +182,7 @@ func (e *DashAlertExtractor) getAlertFromPanels(jsonWithPanels *simplejson.Json,
 		alert.Settings = jsonAlert
 
 		// validate
-		_, err = NewRuleFromDBAlert(alert, logTranslationFailures)
+		_, err = NewRuleFromDBAlert(alert, logTranslationFailures, tsdbService)
 		if err != nil {
 			return nil, err
 		}

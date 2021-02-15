@@ -226,7 +226,7 @@ func (hs *HTTPServer) deleteDashboard(c *models.ReqContext) response.Response {
 		}
 	}
 
-	err := dashboards.NewService().DeleteDashboard(dash.Id, c.OrgId)
+	err := hs.DashboardsService.DeleteDashboard(dash.Id, c.OrgId)
 	if err != nil {
 		var dashboardErr models.DashboardErr
 		if ok := errors.As(err, &dashboardErr); ok {
