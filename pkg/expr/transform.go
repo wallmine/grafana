@@ -11,7 +11,6 @@ import (
 	"github.com/grafana/grafana/pkg/components/simplejson"
 	"github.com/grafana/grafana/pkg/models"
 	pluginmodels "github.com/grafana/grafana/pkg/plugins/models"
-	"github.com/grafana/grafana/pkg/tsdb"
 	"github.com/prometheus/client_golang/prometheus"
 	"golang.org/x/net/context"
 	"google.golang.org/grpc/codes"
@@ -159,9 +158,9 @@ func hiddenRefIDs(queries []backend.DataQuery) (map[string]struct{}, error) {
 	return hidden, nil
 }
 
-// QueryData is called used to query datasources that are not expression commands, but are used
+// queryData is called used to query datasources that are not expression commands, but are used
 // alongside expressions and/or are the input of an expression command.
-func QueryData(ctx context.Context, req *backend.QueryDataRequest) (*backend.QueryDataResponse, error) {
+func (s *Service) queryData(ctx context.Context, req *backend.QueryDataRequest) (*backend.QueryDataResponse, error) {
 	if len(req.Queries) == 0 {
 		return nil, fmt.Errorf("zero queries found in datasource request")
 	}
@@ -211,7 +210,7 @@ func QueryData(ctx context.Context, req *backend.QueryDataRequest) (*backend.Que
 	}
 
 	// Execute the converted queries
-	tsdbRes, err := tsdb.HandleRequest(ctx, getDsInfo.Result, tQ)
+	tsdbRes, err := s.TSDBService.HandleRequest(ctx, getDsInfo.Result, tQ)
 	if err != nil {
 		return nil, err
 	}
