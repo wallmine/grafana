@@ -9,6 +9,7 @@ import (
 	pluginmodels "github.com/grafana/grafana/pkg/plugins/models"
 	"github.com/grafana/grafana/pkg/registry"
 	"github.com/grafana/grafana/pkg/setting"
+	"github.com/grafana/grafana/pkg/tsdb/azuremonitor"
 	"github.com/grafana/grafana/pkg/tsdb/cloudmonitoring"
 	"github.com/grafana/grafana/pkg/tsdb/cloudwatch"
 	"github.com/grafana/grafana/pkg/tsdb/elasticsearch"
@@ -42,6 +43,7 @@ type Service struct {
 	PluginManager          *manager.PluginManager        `inject:""`
 	CloudWatchService      *cloudwatch.CloudWatchService `inject:""`
 	CloudMonitoringService *cloudmonitoring.Service      `inject:""`
+	AzureMonitorService    *azuremonitor.Service         `inject:""`
 
 	registry map[string]func(*models.DataSource) (pluginmodels.TSDBPlugin, error)
 }
@@ -58,6 +60,7 @@ func (s *Service) Init() error {
 	s.registry["elasticsearch"] = elasticsearch.NewExecutor
 	s.registry["cloudwatch"] = s.CloudWatchService.NewExecutor
 	s.registry["stackdriver"] = s.CloudMonitoringService.NewExecutor
+	s.registry["grafana-azure-monitor-datasource"] = s.AzureMonitorService.NewExecutor
 	return nil
 }
 
