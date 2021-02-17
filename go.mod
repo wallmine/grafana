@@ -63,7 +63,6 @@ require (
 	github.com/mattn/go-sqlite3 v1.14.6
 	github.com/opentracing/opentracing-go v1.2.0
 	github.com/patrickmn/go-cache v2.1.0+incompatible
-	github.com/pelletier/go-toml v1.4.0
 	github.com/pkg/errors v0.9.1
 	github.com/prometheus/client_golang v1.9.0
 	github.com/prometheus/client_model v0.2.0
