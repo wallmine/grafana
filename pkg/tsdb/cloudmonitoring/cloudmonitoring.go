@@ -16,12 +16,13 @@ import (
 	"strings"
 	"time"
 
+	"github.com/grafana/grafana/pkg/registry"
+
 	"github.com/grafana/grafana-plugin-sdk-go/data"
 	"github.com/grafana/grafana/pkg/api/pluginproxy"
 	"github.com/grafana/grafana/pkg/components/simplejson"
 	"github.com/grafana/grafana/pkg/infra/log"
 	"github.com/grafana/grafana/pkg/models"
-	"github.com/grafana/grafana/pkg/plugins"
 	"github.com/grafana/grafana/pkg/plugins/manager"
 	pluginmodels "github.com/grafana/grafana/pkg/plugins/models"
 	"github.com/grafana/grafana/pkg/setting"
@@ -63,26 +64,40 @@ const (
 	mqlEditorMode     string = "mql"
 )
 
+func init() {
+	registry.Register(&registry.Descriptor{
+		Name:         "CloudMonitoringService",
+		InitPriority: registry.Low,
+		Instance:     &Service{},
+	})
+}
+
 type Service struct {
 	PluginManager *manager.PluginManager `inject:""`
 }
 
+func (s *Service) Init() error {
+	return nil
+}
+
 // Executor executes queries for the CloudMonitoring datasource.
 type Executor struct {
-	httpClient *http.Client
-	dsInfo     *models.DataSource
+	httpClient    *http.Client
+	dsInfo        *models.DataSource
+	pluginManager *manager.PluginManager
 }
 
 // NewExecutor returns an Executor.
-func NewExecutor(dsInfo *models.DataSource) (pluginmodels.TSDBPlugin, error) {
+func (s *Service) NewExecutor(dsInfo *models.DataSource) (pluginmodels.TSDBPlugin, error) {
 	httpClient, err := dsInfo.GetHttpClient()
 	if err != nil {
 		return nil, err
 	}
 
 	return &Executor{
-		httpClient: httpClient,
-		dsInfo:     dsInfo,
+		httpClient:    httpClient,
+		dsInfo:        dsInfo,
+		pluginManager: s.PluginManager,
 	}, nil
 }
 
@@ -516,12 +531,12 @@ func (e *Executor) createRequest(ctx context.Context, dsInfo *models.DataSource,
 	req.Header.Set("User-Agent", fmt.Sprintf("Grafana/%s", setting.BuildVersion))
 
 	// find plugin
-	plugin, ok := plugins.DataSources[dsInfo.Type]
+	plugin, ok := e.pluginManager.DataSources[dsInfo.Type]
 	if !ok {
 		return nil, errors.New("unable to find datasource plugin CloudMonitoring")
 	}
 
-	var cloudMonitoringRoute *plugins.AppPluginRoute
+	var cloudMonitoringRoute *pluginmodels.AppPluginRoute
 	for _, route := range plugin.Routes {
 		if route.Path == "cloudmonitoring" {
 			cloudMonitoringRoute = route

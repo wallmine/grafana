@@ -38,9 +38,10 @@ type GetTSDBQueryEndpointFn func(ds *models.DataSource) (TSDBQueryEndpoint, erro
 
 // Service handles requests to TSDB data sources.
 type Service struct {
-	Cfg               *setting.Cfg                  `inject:""`
-	PluginManager     manager.PluginManager         `inject:""`
-	CloudWatchService *cloudwatch.CloudWatchService `inject:""`
+	Cfg                    *setting.Cfg                  `inject:""`
+	PluginManager          *manager.PluginManager        `inject:""`
+	CloudWatchService      *cloudwatch.CloudWatchService `inject:""`
+	CloudMonitoringService *cloudmonitoring.Service      `inject:""`
 
 	registry map[string]func(*models.DataSource) (pluginmodels.TSDBPlugin, error)
 }
@@ -56,7 +57,7 @@ func (s *Service) Init() error {
 	s.registry["mysql"] = mysql.NewExecutor
 	s.registry["elasticsearch"] = elasticsearch.NewExecutor
 	s.registry["cloudwatch"] = s.CloudWatchService.NewExecutor
-	s.registry["stackdriver"] = cloudmonitoring.NewExecutor
+	s.registry["stackdriver"] = s.CloudMonitoringService.NewExecutor
 	return nil
 }
 

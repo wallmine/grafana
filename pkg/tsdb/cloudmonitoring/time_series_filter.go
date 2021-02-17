@@ -19,7 +19,7 @@ import (
 
 func (timeSeriesFilter *cloudMonitoringTimeSeriesFilter) run(ctx context.Context, tsdbQuery pluginmodels.TSDBQuery,
 	e *Executor) (pluginmodels.TSDBQueryResult, cloudMonitoringResponse, string, error) {
-	queryResult := pluginmodels.TSDBQueryResult{Meta: simplejson.New(), RefId: timeSeriesFilter.RefID}
+	queryResult := pluginmodels.TSDBQueryResult{Meta: simplejson.New(), RefID: timeSeriesFilter.RefID}
 	projectName := timeSeriesFilter.ProjectName
 	if projectName == "" {
 		defaultProject, err := e.getDefaultProject(ctx)

@@ -21,7 +21,7 @@ import (
 
 func (timeSeriesQuery cloudMonitoringTimeSeriesQuery) run(ctx context.Context, tsdbQuery pluginmodels.TSDBQuery,
 	e *Executor) (pluginmodels.TSDBQueryResult, cloudMonitoringResponse, string, error) {
-	queryResult := pluginmodels.TSDBQueryResult{Meta: simplejson.New(), RefId: timeSeriesQuery.RefID}
+	queryResult := pluginmodels.TSDBQueryResult{Meta: simplejson.New(), RefID: timeSeriesQuery.RefID}
 	projectName := timeSeriesQuery.ProjectName
 	if projectName == "" {
 		defaultProject, err := e.getDefaultProject(ctx)
@@ -44,7 +44,7 @@ func (timeSeriesQuery cloudMonitoringTimeSeriesQuery) run(ctx context.Context, t
 		return queryResult, cloudMonitoringResponse{}, "", nil
 	}
 	intervalCalculator := interval.NewCalculator(interval.CalculatorOptions{})
-	interval := intervalCalculator.Calculate(tsdbQuery.TimeRange, time.Duration(timeSeriesQuery.IntervalMS/1000)*time.Second)
+	interval := intervalCalculator.Calculate(*tsdbQuery.TimeRange, time.Duration(timeSeriesQuery.IntervalMS/1000)*time.Second)
 	timeFormat := "2006/01/02-15:04:05"
 	timeSeriesQuery.Query += fmt.Sprintf(" | graph_period %s | within d'%s', d'%s'", interval.Text, from.UTC().Format(timeFormat), to.UTC().Format(timeFormat))
 
