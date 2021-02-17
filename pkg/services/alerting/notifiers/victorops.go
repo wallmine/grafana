@@ -8,6 +8,8 @@ import (
 	"github.com/grafana/grafana/pkg/infra/log"
 	"github.com/grafana/grafana/pkg/models"
 	"github.com/grafana/grafana/pkg/services/alerting"
+	"github.com/grafana/grafana/pkg/services/alerting/errors"
+	"github.com/grafana/grafana/pkg/services/alerting/evalcontext"
 	"github.com/grafana/grafana/pkg/setting"
 )
 
@@ -50,7 +52,7 @@ func NewVictoropsNotifier(model *models.AlertNotification) (alerting.Notifier, e
 	autoResolve := model.Settings.Get("autoResolve").MustBool(true)
 	url := model.Settings.Get("url").MustString()
 	if url == "" {
-		return nil, alerting.ValidationError{Reason: "Could not find victorops url property in settings"}
+		return nil, errors.ValidationError{Reason: "Could not find victorops url property in settings"}
 	}
 	noDataAlertType := model.Settings.Get("noDataAlertType").MustString(AlertStateWarning)
 
@@ -75,7 +77,7 @@ type VictoropsNotifier struct {
 }
 
 // Notify sends notification to Victorops via POST to URL endpoint
-func (vn *VictoropsNotifier) Notify(evalContext *alerting.EvalContext) error {
+func (vn *VictoropsNotifier) Notify(evalContext *evalcontext.EvalContext) error {
 	vn.log.Info("Executing victorops notification", "ruleId", evalContext.Rule.ID, "notification", vn.Name)
 
 	ruleURL, err := evalContext.GetRuleURL()

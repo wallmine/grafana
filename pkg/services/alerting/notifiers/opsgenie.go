@@ -9,6 +9,8 @@ import (
 	"github.com/grafana/grafana/pkg/infra/log"
 	"github.com/grafana/grafana/pkg/models"
 	"github.com/grafana/grafana/pkg/services/alerting"
+	"github.com/grafana/grafana/pkg/services/alerting/errors"
+	"github.com/grafana/grafana/pkg/services/alerting/evalcontext"
 )
 
 func init() {
@@ -62,7 +64,7 @@ func NewOpsGenieNotifier(model *models.AlertNotification) (alerting.Notifier, er
 	apiKey := model.DecryptedValue("apiKey", model.Settings.Get("apiKey").MustString())
 	apiURL := model.Settings.Get("apiUrl").MustString()
 	if apiKey == "" {
-		return nil, alerting.ValidationError{Reason: "Could not find api key property in settings"}
+		return nil, errors.ValidationError{Reason: "Could not find api key property in settings"}
 	}
 	if apiURL == "" {
 		apiURL = opsgenieAlertURL
@@ -90,7 +92,7 @@ type OpsGenieNotifier struct {
 }
 
 // Notify sends an alert notification to OpsGenie.
-func (on *OpsGenieNotifier) Notify(evalContext *alerting.EvalContext) error {
+func (on *OpsGenieNotifier) Notify(evalContext *evalcontext.EvalContext) error {
 	var err error
 	switch evalContext.Rule.State {
 	case models.AlertStateOK:
@@ -105,7 +107,7 @@ func (on *OpsGenieNotifier) Notify(evalContext *alerting.EvalContext) error {
 	return err
 }
 
-func (on *OpsGenieNotifier) createAlert(evalContext *alerting.EvalContext) error {
+func (on *OpsGenieNotifier) createAlert(evalContext *evalcontext.EvalContext) error {
 	on.log.Info("Creating OpsGenie alert", "ruleId", evalContext.Rule.ID, "notification", on.Name)
 
 	ruleURL, err := evalContext.GetRuleURL()
@@ -170,7 +172,7 @@ func (on *OpsGenieNotifier) createAlert(evalContext *alerting.EvalContext) error
 	return nil
 }
 
-func (on *OpsGenieNotifier) closeAlert(evalContext *alerting.EvalContext) error {
+func (on *OpsGenieNotifier) closeAlert(evalContext *evalcontext.EvalContext) error {
 	on.log.Info("Closing OpsGenie alert", "ruleId", evalContext.Rule.ID, "notification", on.Name)
 
 	bodyJSON := simplejson.New()

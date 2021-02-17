@@ -12,6 +12,9 @@ import (
 	"github.com/grafana/grafana/pkg/infra/log"
 	"github.com/grafana/grafana/pkg/models"
 	"github.com/grafana/grafana/pkg/services/alerting"
+	"github.com/grafana/grafana/pkg/services/alerting/alertingmodels"
+	"github.com/grafana/grafana/pkg/services/alerting/errors"
+	"github.com/grafana/grafana/pkg/services/alerting/evalcontext"
 )
 
 func init() {
@@ -52,7 +55,7 @@ func init() {
 func NewAlertmanagerNotifier(model *models.AlertNotification) (alerting.Notifier, error) {
 	urlString := model.Settings.Get("url").MustString()
 	if urlString == "" {
-		return nil, alerting.ValidationError{Reason: "Could not find url property in settings"}
+		return nil, errors.ValidationError{Reason: "Could not find url property in settings"}
 	}
 
 	var url []string
@@ -84,7 +87,7 @@ type AlertmanagerNotifier struct {
 }
 
 // ShouldNotify returns true if the notifiers should be used depending on state
-func (am *AlertmanagerNotifier) ShouldNotify(ctx context.Context, evalContext *alerting.EvalContext, notificationState *models.AlertNotificationState) bool {
+func (am *AlertmanagerNotifier) ShouldNotify(ctx context.Context, evalContext *evalcontext.EvalContext, notificationState *models.AlertNotificationState) bool {
 	am.log.Debug("Should notify", "ruleId", evalContext.Rule.ID, "state", evalContext.Rule.State, "previousState", evalContext.PrevAlertState)
 
 	// Do not notify when we become OK for the first time.
@@ -100,7 +103,8 @@ func (am *AlertmanagerNotifier) ShouldNotify(ctx context.Context, evalContext *a
 	return evalContext.Rule.State == models.AlertStateAlerting
 }
 
-func (am *AlertmanagerNotifier) createAlert(evalContext *alerting.EvalContext, match *alerting.EvalMatch, ruleURL string) *simplejson.Json {
+func (am *AlertmanagerNotifier) createAlert(evalContext *evalcontext.EvalContext,
+	match *alertingmodels.EvalMatch, ruleURL string) *simplejson.Json {
 	alertJSON := simplejson.New()
 	alertJSON.Set("startsAt", evalContext.StartTime.UTC().Format(time.RFC3339))
 	if evalContext.Rule.State == models.AlertStateOK {
@@ -147,7 +151,7 @@ func (am *AlertmanagerNotifier) createAlert(evalContext *alerting.EvalContext, m
 }
 
 // Notify sends alert notifications to the alert manager
-func (am *AlertmanagerNotifier) Notify(evalContext *alerting.EvalContext) error {
+func (am *AlertmanagerNotifier) Notify(evalContext *evalcontext.EvalContext) error {
 	am.log.Info("Sending Alertmanager alert", "ruleId", evalContext.Rule.ID, "notification", am.Name)
 
 	ruleURL, err := evalContext.GetRuleURL()

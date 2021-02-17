@@ -1,4 +1,4 @@
-package alerting
+package rule
 
 import (
 	"testing"
@@ -37,7 +37,7 @@ func TestAlertRuleFrequencyParsing(t *testing.T) {
 
 	for _, tc := range tcs {
 		t.Run(tc.input, func(t *testing.T) {
-			r, err := getTimeDurationStringToSeconds(tc.input)
+			r, err := timeutils.GetTimeDurationStringToSeconds(tc.input)
 			if tc.err == nil {
 				require.NoError(t, err)
 			} else {
@@ -56,7 +56,7 @@ func TestAlertRuleModel(t *testing.T) {
 		})
 
 		Convey("should return err for empty string", func() {
-			_, err := getTimeDurationStringToSeconds("")
+			_, err := timeutils.GetTimeDurationStringToSeconds("")
 			So(err, ShouldNotBeNil)
 		})
 

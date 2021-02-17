@@ -7,36 +7,40 @@ import (
 	"github.com/grafana/grafana/pkg/infra/log"
 	"github.com/grafana/grafana/pkg/infra/metrics"
 	"github.com/grafana/grafana/pkg/models"
+	"github.com/grafana/grafana/pkg/services/alerting/rule"
+	"github.com/grafana/grafana/pkg/tsdb/tsdbifaces"
 )
 
 type ruleReader interface {
-	fetch() []*Rule
+	fetch() []*rule.Rule
 }
 
 type defaultRuleReader struct {
 	sync.RWMutex
-	log log.Logger
+	log        log.Logger
+	reqHandler tsdbifaces.RequestHandler
 }
 
-func newRuleReader() *defaultRuleReader {
+func newRuleReader(reqHandler tsdbifaces.RequestHandler) *defaultRuleReader {
 	ruleReader := &defaultRuleReader{
-		log: log.New("alerting.ruleReader"),
+		log:        log.New("alerting.ruleReader"),
+		reqHandler: reqHandler,
 	}
 
 	return ruleReader
 }
 
-func (arr *defaultRuleReader) fetch() []*Rule {
+func (arr *defaultRuleReader) fetch() []*rule.Rule {
 	cmd := &models.GetAllAlertsQuery{}
 
 	if err := bus.Dispatch(cmd); err != nil {
 		arr.log.Error("Could not load alerts", "error", err)
-		return []*Rule{}
+		return []*rule.Rule{}
 	}
 
-	res := make([]*Rule, 0)
+	res := make([]*rule.Rule, 0)
 	for _, ruleDef := range cmd.Result {
-		if model, err := NewRuleFromDBAlert(ruleDef, false); err != nil {
+		if model, err := rule.NewRuleFromDBAlert(ruleDef, false, arr.reqHandler); err != nil {
 			arr.log.Error("Could not build alert model for rule", "ruleId", ruleDef.Id, "error", err)
 		} else {
 			res = append(res, model)

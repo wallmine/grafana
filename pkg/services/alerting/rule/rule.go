@@ -1,25 +1,19 @@
-package alerting
+package rule
 
 import (
 	"errors"
-	"fmt"
-	"regexp"
-	"strconv"
 	"time"
 
 	"github.com/grafana/grafana/pkg/bus"
 	"github.com/grafana/grafana/pkg/components/simplejson"
+	"github.com/grafana/grafana/pkg/infra/log"
 	"github.com/grafana/grafana/pkg/models"
-	"github.com/grafana/grafana/pkg/tsdb"
+	"github.com/grafana/grafana/pkg/services/alerting/alertingifaces"
+	alertingerrors "github.com/grafana/grafana/pkg/services/alerting/errors"
+	"github.com/grafana/grafana/pkg/tsdb/tsdbifaces"
 )
 
-var (
-	// ErrFrequencyCannotBeZeroOrLess frequency cannot be below zero
-	ErrFrequencyCannotBeZeroOrLess = errors.New(`"evaluate every" cannot be zero or below`)
-
-	// ErrFrequencyCouldNotBeParsed frequency cannot be parsed
-	ErrFrequencyCouldNotBeParsed = errors.New(`"evaluate every" field could not be parsed`)
-)
+var plog = log.New("alerting.rule")
 
 // Rule is the in-memory version of an alert rule.
 type Rule struct {
@@ -35,86 +29,17 @@ type Rule struct {
 	NoDataState         models.NoDataOption
 	ExecutionErrorState models.ExecutionErrorOption
 	State               models.AlertStateType
-	Conditions          []Condition
+	Conditions          []alertingifaces.Condition
 	Notifications       []string
 	AlertRuleTags       []*models.Tag
 
 	StateChanges int64
 }
 
-// ValidationError is a typed error with meta data
-// about the validation error.
-type ValidationError struct {
-	Reason      string
-	Err         error
-	AlertID     int64
-	DashboardID int64
-	PanelID     int64
-}
-
-func (e ValidationError) Error() string {
-	extraInfo := e.Reason
-	if e.AlertID != 0 {
-		extraInfo = fmt.Sprintf("%s AlertId: %v", extraInfo, e.AlertID)
-	}
-
-	if e.PanelID != 0 {
-		extraInfo = fmt.Sprintf("%s PanelId: %v", extraInfo, e.PanelID)
-	}
-
-	if e.DashboardID != 0 {
-		extraInfo = fmt.Sprintf("%s DashboardId: %v", extraInfo, e.DashboardID)
-	}
-
-	if e.Err != nil {
-		return fmt.Sprintf("alert validation error: %s%s", e.Err.Error(), extraInfo)
-	}
-
-	return fmt.Sprintf("alert validation error: %s", extraInfo)
-}
-
-var (
-	valueFormatRegex = regexp.MustCompile(`^\d+`)
-	unitFormatRegex  = regexp.MustCompile(`\w{1}$`)
-)
-
-var unitMultiplier = map[string]int{
-	"s": 1,
-	"m": 60,
-	"h": 3600,
-	"d": 86400,
-}
-
-func getTimeDurationStringToSeconds(str string) (int64, error) {
-	multiplier := 1
-
-	matches := valueFormatRegex.FindAllString(str, 1)
-
-	if len(matches) == 0 {
-		return 0, ErrFrequencyCouldNotBeParsed
-	}
-
-	value, err := strconv.Atoi(matches[0])
-	if err != nil {
-		return 0, err
-	}
-
-	if value == 0 {
-		return 0, ErrFrequencyCannotBeZeroOrLess
-	}
-
-	unit := unitFormatRegex.FindAllString(str, 1)[0]
-
-	if val, ok := unitMultiplier[unit]; ok {
-		multiplier = val
-	}
-
-	return int64(value * multiplier), nil
-}
-
 // NewRuleFromDBAlert maps a db version of
 // alert to an in-memory version.
-func NewRuleFromDBAlert(ruleDef *models.Alert, logTranslationFailures bool, tsdbService *tsdb.Service) (*Rule, error) {
+func NewRuleFromDBAlert(ruleDef *models.Alert, logTranslationFailures bool,
+	requestHandler tsdbifaces.RequestHandler) (*Rule, error) {
 	model := &Rule{}
 	model.ID = ruleDef.Id
 	model.OrgID = ruleDef.OrgId
@@ -142,11 +67,13 @@ func NewRuleFromDBAlert(ruleDef *models.Alert, logTranslationFailures bool, tsdb
 			uid, err := translateNotificationIDToUID(id, ruleDef.OrgId)
 			if err != nil {
 				if !errors.Is(err, models.ErrAlertNotificationFailedTranslateUniqueID) {
-					logger.Error("Failed to translate notification id to uid", "error", err.Error(), "dashboardId", model.DashboardID, "alert", model.Name, "panelId", model.PanelID, "notificationId", id)
+					plog.Error("Failed to translate notification id to uid", "error", err.Error(),
+						"dashboardId", model.DashboardID, "alert", model.Name, "panelId", model.PanelID, "notificationId", id)
 				}
 
 				if logTranslationFailures {
-					logger.Warn("Unable to translate notification id to uid", "dashboardId", model.DashboardID, "alert", model.Name, "panelId", model.PanelID, "notificationId", id)
+					plog.Warn("Unable to translate notification id to uid", "dashboardId", model.DashboardID,
+						"alert", model.Name, "panelId", model.PanelID, "notificationId", id)
 				}
 			} else {
 				model.Notifications = append(model.Notifications, uid)
@@ -154,7 +81,10 @@ func NewRuleFromDBAlert(ruleDef *models.Alert, logTranslationFailures bool, tsdb
 		} else if uid, err := jsonModel.Get("uid").String(); err == nil {
 			model.Notifications = append(model.Notifications, uid)
 		} else {
-			return nil, ValidationError{Reason: "Neither id nor uid is specified in 'notifications' block, " + err.Error(), DashboardID: model.DashboardID, AlertID: model.ID, PanelID: model.PanelID}
+			return nil, alertingerrors.ValidationError{
+				Reason:      "Neither id nor uid is specified in 'notifications' block, " + err.Error(),
+				DashboardID: model.DashboardID, AlertID: model.ID, PanelID: model.PanelID,
+			}
 		}
 	}
 	model.AlertRuleTags = ruleDef.GetTagsFromSettings()
@@ -164,17 +94,22 @@ func NewRuleFromDBAlert(ruleDef *models.Alert, logTranslationFailures bool, tsdb
 		conditionType := conditionModel.Get("type").MustString()
 		factory, exist := conditionFactories[conditionType]
 		if !exist {
-			return nil, ValidationError{Reason: "Unknown alert condition: " + conditionType, DashboardID: model.DashboardID, AlertID: model.ID, PanelID: model.PanelID}
+			return nil, alertingerrors.ValidationError{
+				Reason:      "Unknown alert condition: " + conditionType,
+				DashboardID: model.DashboardID, AlertID: model.ID, PanelID: model.PanelID,
+			}
 		}
-		queryCondition, err := factory(conditionModel, index, tsdbService)
+		queryCondition, err := factory(conditionModel, index, requestHandler)
 		if err != nil {
-			return nil, ValidationError{Err: err, DashboardID: model.DashboardID, AlertID: model.ID, PanelID: model.PanelID}
+			return nil, alertingerrors.ValidationError{
+				Err: err, DashboardID: model.DashboardID, AlertID: model.ID, PanelID: model.PanelID,
+			}
 		}
 		model.Conditions = append(model.Conditions, queryCondition)
 	}
 
 	if len(model.Conditions) == 0 {
-		return nil, ValidationError{Reason: "Alert is missing conditions"}
+		return nil, alertingerrors.ValidationError{Reason: "Alert is missing conditions"}
 	}
 
 	return model, nil
@@ -203,7 +138,8 @@ func getAlertNotificationUIDByIDAndOrgID(notificationID int64, orgID int64) (str
 }
 
 // ConditionFactory is the function signature for creating `Conditions`.
-type ConditionFactory func(model *simplejson.Json, index int, service *tsdb.Service) (Condition, error)
+type ConditionFactory func(model *simplejson.Json, index int, requestHandler tsdbifaces.RequestHandler) (
+	alertingifaces.Condition, error)
 
 var conditionFactories = make(map[string]ConditionFactory)
 

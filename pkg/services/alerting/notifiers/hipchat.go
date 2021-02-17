@@ -11,6 +11,8 @@ import (
 	"github.com/grafana/grafana/pkg/infra/log"
 	"github.com/grafana/grafana/pkg/models"
 	"github.com/grafana/grafana/pkg/services/alerting"
+	"github.com/grafana/grafana/pkg/services/alerting/errors"
+	"github.com/grafana/grafana/pkg/services/alerting/evalcontext"
 )
 
 func init() {
@@ -59,7 +61,7 @@ func NewHipChatNotifier(model *models.AlertNotification) (alerting.Notifier, err
 		url = url[:len(url)-1]
 	}
 	if url == "" {
-		return nil, alerting.ValidationError{Reason: "Could not find url property in settings"}
+		return nil, errors.ValidationError{Reason: "Could not find url property in settings"}
 	}
 
 	apikey := model.Settings.Get("apikey").MustString()
@@ -85,7 +87,7 @@ type HipChatNotifier struct {
 }
 
 // Notify sends an alert notification to HipChat
-func (hc *HipChatNotifier) Notify(evalContext *alerting.EvalContext) error {
+func (hc *HipChatNotifier) Notify(evalContext *evalcontext.EvalContext) error {
 	hc.log.Info("Executing hipchat notification", "ruleId", evalContext.Rule.ID, "notification", hc.Name)
 
 	ruleURL, err := evalContext.GetRuleURL()

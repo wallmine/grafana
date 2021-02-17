@@ -9,6 +9,8 @@ import (
 	"github.com/grafana/grafana/pkg/infra/log"
 	"github.com/grafana/grafana/pkg/models"
 	"github.com/grafana/grafana/pkg/services/alerting"
+	"github.com/grafana/grafana/pkg/services/alerting/errors"
+	"github.com/grafana/grafana/pkg/services/alerting/evalcontext"
 )
 
 const defaultDingdingMsgType = "link"
@@ -50,7 +52,7 @@ func init() {
 func newDingDingNotifier(model *models.AlertNotification) (alerting.Notifier, error) {
 	url := model.Settings.Get("url").MustString()
 	if url == "" {
-		return nil, alerting.ValidationError{Reason: "Could not find url property in settings"}
+		return nil, errors.ValidationError{Reason: "Could not find url property in settings"}
 	}
 
 	msgType := model.Settings.Get("msgType").MustString(defaultDingdingMsgType)
@@ -72,7 +74,7 @@ type DingDingNotifier struct {
 }
 
 // Notify sends the alert notification to dingding.
-func (dd *DingDingNotifier) Notify(evalContext *alerting.EvalContext) error {
+func (dd *DingDingNotifier) Notify(evalContext *evalcontext.EvalContext) error {
 	dd.log.Info("Sending dingding")
 
 	messageURL, err := evalContext.GetRuleURL()
@@ -99,7 +101,7 @@ func (dd *DingDingNotifier) Notify(evalContext *alerting.EvalContext) error {
 	return nil
 }
 
-func (dd *DingDingNotifier) genBody(evalContext *alerting.EvalContext, messageURL string) ([]byte, error) {
+func (dd *DingDingNotifier) genBody(evalContext *evalcontext.EvalContext, messageURL string) ([]byte, error) {
 	q := url.Values{
 		"pc_slide": {"false"},
 		"url":      {messageURL},

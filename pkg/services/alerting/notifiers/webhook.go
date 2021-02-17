@@ -6,6 +6,8 @@ import (
 	"github.com/grafana/grafana/pkg/infra/log"
 	"github.com/grafana/grafana/pkg/models"
 	"github.com/grafana/grafana/pkg/services/alerting"
+	"github.com/grafana/grafana/pkg/services/alerting/errors"
+	"github.com/grafana/grafana/pkg/services/alerting/evalcontext"
 )
 
 func init() {
@@ -60,7 +62,7 @@ func init() {
 func NewWebHookNotifier(model *models.AlertNotification) (alerting.Notifier, error) {
 	url := model.Settings.Get("url").MustString()
 	if url == "" {
-		return nil, alerting.ValidationError{Reason: "Could not find url property in settings"}
+		return nil, errors.ValidationError{Reason: "Could not find url property in settings"}
 	}
 
 	password := model.DecryptedValue("password", model.Settings.Get("password").MustString())
@@ -88,7 +90,7 @@ type WebhookNotifier struct {
 
 // Notify send alert notifications as
 // webhook as http requests.
-func (wn *WebhookNotifier) Notify(evalContext *alerting.EvalContext) error {
+func (wn *WebhookNotifier) Notify(evalContext *evalcontext.EvalContext) error {
 	wn.log.Info("Sending webhook")
 
 	bodyJSON := simplejson.New()

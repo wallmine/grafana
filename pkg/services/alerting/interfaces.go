@@ -5,25 +5,28 @@ import (
 	"time"
 
 	"github.com/grafana/grafana/pkg/models"
+	"github.com/grafana/grafana/pkg/services/alerting/evalcontext"
+	"github.com/grafana/grafana/pkg/services/alerting/job"
+	"github.com/grafana/grafana/pkg/services/alerting/rule"
 )
 
 type evalHandler interface {
-	Eval(evalContext *EvalContext)
+	Eval(evalContext *evalcontext.EvalContext)
 }
 
 type scheduler interface {
-	Tick(time time.Time, execQueue chan *Job)
-	Update(rules []*Rule)
+	Tick(time time.Time, execQueue chan *job.Job)
+	Update(rules []*rule.Rule)
 }
 
 // Notifier is responsible for sending alert notifications.
 type Notifier interface {
-	Notify(evalContext *EvalContext) error
+	Notify(evalContext *evalcontext.EvalContext) error
 	GetType() string
 	NeedsImage() bool
 
 	// ShouldNotify checks this evaluation should send an alert notification
-	ShouldNotify(ctx context.Context, evalContext *EvalContext, notificationState *models.AlertNotificationState) bool
+	ShouldNotify(ctx context.Context, evalContext *evalcontext.EvalContext, notificationState *models.AlertNotificationState) bool
 
 	GetNotifierUID() string
 	GetIsDefault() bool
@@ -47,17 +50,4 @@ func (notifiers notifierStateSlice) ShouldUploadImage() bool {
 	}
 
 	return false
-}
-
-// ConditionResult is the result of a condition evaluation.
-type ConditionResult struct {
-	Firing      bool
-	NoDataFound bool
-	Operator    string
-	EvalMatches []*EvalMatch
-}
-
-// Condition is responsible for evaluating an alert condition.
-type Condition interface {
-	Eval(result *EvalContext) (*ConditionResult, error)
 }

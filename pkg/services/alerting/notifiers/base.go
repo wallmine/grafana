@@ -6,7 +6,7 @@ import (
 
 	"github.com/grafana/grafana/pkg/infra/log"
 	"github.com/grafana/grafana/pkg/models"
-	"github.com/grafana/grafana/pkg/services/alerting"
+	"github.com/grafana/grafana/pkg/services/alerting/evalcontext"
 )
 
 const (
@@ -49,7 +49,7 @@ func NewNotifierBase(model *models.AlertNotification) NotifierBase {
 }
 
 // ShouldNotify checks this evaluation should send an alert notification
-func (n *NotifierBase) ShouldNotify(ctx context.Context, context *alerting.EvalContext, notifierState *models.AlertNotificationState) bool {
+func (n *NotifierBase) ShouldNotify(ctx context.Context, context *evalcontext.EvalContext, notifierState *models.AlertNotificationState) bool {
 	prevState := context.PrevAlertState
 	newState := context.Rule.State
 

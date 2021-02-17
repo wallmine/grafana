@@ -1,4 +1,4 @@
-package alerting
+package dashboards
 
 import (
 	"encoding/json"
@@ -10,23 +10,30 @@ import (
 	"github.com/grafana/grafana/pkg/components/simplejson"
 	"github.com/grafana/grafana/pkg/infra/log"
 	"github.com/grafana/grafana/pkg/models"
+	alertingerrors "github.com/grafana/grafana/pkg/services/alerting/errors"
+	"github.com/grafana/grafana/pkg/services/alerting/rule"
+	"github.com/grafana/grafana/pkg/services/alerting/timeutils"
+	"github.com/grafana/grafana/pkg/tsdb/tsdbifaces"
 )
 
 // DashAlertExtractor extracts alerts from the dashboard json.
 type DashAlertExtractor struct {
-	User  *models.SignedInUser
-	Dash  *models.Dashboard
-	OrgID int64
-	log   log.Logger
+	User       *models.SignedInUser
+	Dash       *models.Dashboard
+	OrgID      int64
+	log        log.Logger
+	reqHandler tsdbifaces.RequestHandler
 }
 
 // NewDashAlertExtractor returns a new DashAlertExtractor.
-func NewDashAlertExtractor(dash *models.Dashboard, orgID int64, user *models.SignedInUser) *DashAlertExtractor {
+func NewDashAlertExtractor(dash *models.Dashboard, orgID int64, user *models.SignedInUser,
+	requestHandler tsdbifaces.RequestHandler) *DashAlertExtractor {
 	return &DashAlertExtractor{
-		User:  user,
-		Dash:  dash,
-		OrgID: orgID,
-		log:   log.New("alerting.extractor"),
+		User:       user,
+		Dash:       dash,
+		OrgID:      orgID,
+		log:        log.New("alerting.extractor"),
+		reqHandler: requestHandler,
 	}
 }
 
@@ -95,7 +102,7 @@ func (e *DashAlertExtractor) getAlertFromPanels(jsonWithPanels *simplejson.Json,
 
 		panelID, err := panel.Get("id").Int64()
 		if err != nil {
-			return nil, ValidationError{Reason: "A numeric panel id property is missing"}
+			return nil, alertingerrors.ValidationError{Reason: "A numeric panel id property is missing"}
 		}
 
 		// backward compatibility check, can be removed later
@@ -104,9 +111,9 @@ func (e *DashAlertExtractor) getAlertFromPanels(jsonWithPanels *simplejson.Json,
 			continue
 		}
 
-		frequency, err := getTimeDurationStringToSeconds(jsonAlert.Get("frequency").MustString())
+		frequency, err := timeutils.GetTimeDurationStringToSeconds(jsonAlert.Get("frequency").MustString())
 		if err != nil {
-			return nil, ValidationError{Reason: err.Error()}
+			return nil, alertingerrors.ValidationError{Reason: err.Error()}
 		}
 
 		rawFor := jsonAlert.Get("for").MustString()
@@ -114,7 +121,7 @@ func (e *DashAlertExtractor) getAlertFromPanels(jsonWithPanels *simplejson.Json,
 		if rawFor != "" {
 			forValue, err = time.ParseDuration(rawFor)
 			if err != nil {
-				return nil, ValidationError{Reason: "Could not parse for"}
+				return nil, alertingerrors.ValidationError{Reason: "Could not parse for"}
 			}
 		}
 
@@ -139,7 +146,7 @@ func (e *DashAlertExtractor) getAlertFromPanels(jsonWithPanels *simplejson.Json,
 
 			if panelQuery == nil {
 				reason := fmt.Sprintf("Alert on PanelId: %v refers to query(%s) that cannot be found", alert.PanelId, queryRefID)
-				return nil, ValidationError{Reason: reason}
+				return nil, alertingerrors.ValidationError{Reason: reason}
 			}
 
 			dsName := ""
@@ -152,7 +159,10 @@ func (e *DashAlertExtractor) getAlertFromPanels(jsonWithPanels *simplejson.Json,
 			datasource, err := e.lookupDatasourceID(dsName)
 			if err != nil {
 				e.log.Debug("Error looking up datasource", "error", err)
-				return nil, ValidationError{Reason: fmt.Sprintf("Data source used by alert rule not found, alertName=%v, datasource=%s", alert.Name, dsName)}
+				return nil, alertingerrors.ValidationError{
+					Reason: fmt.Sprintf("Data source used by alert rule not found, alertName=%v, datasource=%s",
+						alert.Name, dsName),
+				}
 			}
 
 			dsFilterQuery := models.DatasourcesPermissionFilterQuery{
@@ -182,13 +192,15 @@ func (e *DashAlertExtractor) getAlertFromPanels(jsonWithPanels *simplejson.Json,
 		alert.Settings = jsonAlert
 
 		// validate
-		_, err = NewRuleFromDBAlert(alert, logTranslationFailures, tsdbService)
+		_, err = rule.NewRuleFromDBAlert(alert, logTranslationFailures, e.reqHandler)
 		if err != nil {
 			return nil, err
 		}
 
 		if !validateAlertFunc(alert) {
-			return nil, ValidationError{Reason: fmt.Sprintf("Panel id is not correct, alertName=%v, panelId=%v", alert.Name, alert.PanelId)}
+			return nil, alertingerrors.ValidationError{
+				Reason: fmt.Sprintf("Panel id is not correct, alertName=%v, panelId=%v", alert.Name, alert.PanelId),
+			}
 		}
 
 		alerts = append(alerts, alert)

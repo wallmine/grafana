@@ -11,6 +11,8 @@ import (
 	"github.com/grafana/grafana/pkg/infra/log"
 	"github.com/grafana/grafana/pkg/models"
 	"github.com/grafana/grafana/pkg/services/alerting"
+	"github.com/grafana/grafana/pkg/services/alerting/errors"
+	"github.com/grafana/grafana/pkg/services/alerting/evalcontext"
 )
 
 func init() {
@@ -80,7 +82,7 @@ func NewPagerdutyNotifier(model *models.AlertNotification) (alerting.Notifier, e
 	key := model.DecryptedValue("integrationKey", model.Settings.Get("integrationKey").MustString())
 	messageInDetails := model.Settings.Get("messageInDetails").MustBool(false)
 	if key == "" {
-		return nil, alerting.ValidationError{Reason: "Could not find integration key property in settings"}
+		return nil, errors.ValidationError{Reason: "Could not find integration key property in settings"}
 	}
 
 	return &PagerdutyNotifier{
@@ -105,7 +107,7 @@ type PagerdutyNotifier struct {
 }
 
 // buildEventPayload is responsible for building the event payload body for sending to Pagerduty v2 API
-func (pn *PagerdutyNotifier) buildEventPayload(evalContext *alerting.EvalContext) ([]byte, error) {
+func (pn *PagerdutyNotifier) buildEventPayload(evalContext *evalcontext.EvalContext) ([]byte, error) {
 	eventType := "trigger"
 	if evalContext.Rule.State == models.AlertStateOK {
 		eventType = "resolve"
@@ -216,7 +218,7 @@ func (pn *PagerdutyNotifier) buildEventPayload(evalContext *alerting.EvalContext
 }
 
 // Notify sends an alert notification to PagerDuty
-func (pn *PagerdutyNotifier) Notify(evalContext *alerting.EvalContext) error {
+func (pn *PagerdutyNotifier) Notify(evalContext *evalcontext.EvalContext) error {
 	if evalContext.Rule.State == models.AlertStateOK && !pn.AutoResolve {
 		pn.log.Info("Not sending a trigger to Pagerduty", "state", evalContext.Rule.State, "auto resolve", pn.AutoResolve)
 		return nil

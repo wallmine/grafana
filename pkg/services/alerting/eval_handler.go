@@ -7,6 +7,7 @@ import (
 
 	"github.com/grafana/grafana/pkg/infra/log"
 	"github.com/grafana/grafana/pkg/infra/metrics"
+	"github.com/grafana/grafana/pkg/services/alerting/evalcontext"
 )
 
 // DefaultEvalHandler is responsible for evaluating the alert rule.
@@ -24,7 +25,7 @@ func NewEvalHandler() *DefaultEvalHandler {
 }
 
 // Eval evaluated the alert rule.
-func (e *DefaultEvalHandler) Eval(context *EvalContext) {
+func (e *DefaultEvalHandler) Eval(context *evalcontext.EvalContext) {
 	firing := true
 	noDataFound := true
 	conditionEvals := ""

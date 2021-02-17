@@ -17,6 +17,8 @@ import (
 	"github.com/grafana/grafana/pkg/infra/log"
 	"github.com/grafana/grafana/pkg/models"
 	"github.com/grafana/grafana/pkg/services/alerting"
+	"github.com/grafana/grafana/pkg/services/alerting/errors"
+	"github.com/grafana/grafana/pkg/services/alerting/evalcontext"
 	"github.com/grafana/grafana/pkg/setting"
 )
 
@@ -117,12 +119,12 @@ var reRecipient *regexp.Regexp = regexp.MustCompile("^((@[a-z0-9][a-zA-Z0-9._-]*
 func NewSlackNotifier(model *models.AlertNotification) (alerting.Notifier, error) {
 	url := model.DecryptedValue("url", model.Settings.Get("url").MustString())
 	if url == "" {
-		return nil, alerting.ValidationError{Reason: "Could not find url property in settings"}
+		return nil, errors.ValidationError{Reason: "Could not find url property in settings"}
 	}
 
 	recipient := strings.TrimSpace(model.Settings.Get("recipient").MustString())
 	if recipient != "" && !reRecipient.MatchString(recipient) {
-		return nil, alerting.ValidationError{Reason: fmt.Sprintf("Recipient on invalid format: %q", recipient)}
+		return nil, errors.ValidationError{Reason: fmt.Sprintf("Recipient on invalid format: %q", recipient)}
 	}
 	username := model.Settings.Get("username").MustString()
 	iconEmoji := model.Settings.Get("icon_emoji").MustString()
@@ -135,7 +137,7 @@ func NewSlackNotifier(model *models.AlertNotification) (alerting.Notifier, error
 	uploadImage := model.Settings.Get("uploadImage").MustBool(true)
 
 	if mentionChannel != "" && mentionChannel != "here" && mentionChannel != "channel" {
-		return nil, alerting.ValidationError{
+		return nil, errors.ValidationError{
 			Reason: fmt.Sprintf("Invalid value for mentionChannel: %q", mentionChannel),
 		}
 	}
@@ -188,7 +190,7 @@ type SlackNotifier struct {
 }
 
 // Notify send alert notification to Slack.
-func (sn *SlackNotifier) Notify(evalContext *alerting.EvalContext) error {
+func (sn *SlackNotifier) Notify(evalContext *evalcontext.EvalContext) error {
 	sn.log.Info("Executing slack notification", "ruleId", evalContext.Rule.ID, "notification", sn.Name)
 
 	ruleURL, err := evalContext.GetRuleURL()
@@ -329,7 +331,7 @@ func (sn *SlackNotifier) Notify(evalContext *alerting.EvalContext) error {
 	return nil
 }
 
-func (sn *SlackNotifier) slackFileUpload(evalContext *alerting.EvalContext, log log.Logger, url string, recipient string, token string) error {
+func (sn *SlackNotifier) slackFileUpload(evalContext *evalcontext.EvalContext, log log.Logger, url string, recipient string, token string) error {
 	if evalContext.ImageOnDiskPath == "" {
 		// nolint:gosec
 		// We can ignore the gosec G304 warning on this one because `setting.HomePath` comes from Grafana's configuration file.

@@ -8,6 +8,8 @@ import (
 	"github.com/grafana/grafana/pkg/infra/log"
 	"github.com/grafana/grafana/pkg/models"
 	"github.com/grafana/grafana/pkg/services/alerting"
+	"github.com/grafana/grafana/pkg/services/alerting/errors"
+	"github.com/grafana/grafana/pkg/services/alerting/evalcontext"
 )
 
 func init() {
@@ -38,7 +40,7 @@ const (
 func NewLINENotifier(model *models.AlertNotification) (alerting.Notifier, error) {
 	token := model.DecryptedValue("token", model.Settings.Get("token").MustString())
 	if token == "" {
-		return nil, alerting.ValidationError{Reason: "Could not find token in settings"}
+		return nil, errors.ValidationError{Reason: "Could not find token in settings"}
 	}
 
 	return &LineNotifier{
@@ -57,13 +59,13 @@ type LineNotifier struct {
 }
 
 // Notify send an alert notification to LINE
-func (ln *LineNotifier) Notify(evalContext *alerting.EvalContext) error {
+func (ln *LineNotifier) Notify(evalContext *evalcontext.EvalContext) error {
 	ln.log.Info("Executing line notification", "ruleId", evalContext.Rule.ID, "notification", ln.Name)
 
 	return ln.createAlert(evalContext)
 }
 
-func (ln *LineNotifier) createAlert(evalContext *alerting.EvalContext) error {
+func (ln *LineNotifier) createAlert(evalContext *evalcontext.EvalContext) error {
 	ln.log.Info("Creating Line notify", "ruleId", evalContext.Rule.ID, "notification", ln.Name)
 	ruleURL, err := evalContext.GetRuleURL()
 	if err != nil {

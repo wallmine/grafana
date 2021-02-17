@@ -9,6 +9,8 @@ import (
 	"github.com/grafana/grafana/pkg/util"
 
 	"github.com/grafana/grafana/pkg/services/alerting"
+	"github.com/grafana/grafana/pkg/services/alerting/errors"
+	"github.com/grafana/grafana/pkg/services/alerting/evalcontext"
 	"github.com/grafana/grafana/pkg/setting"
 )
 
@@ -53,7 +55,7 @@ func NewEmailNotifier(model *models.AlertNotification) (alerting.Notifier, error
 	singleEmail := model.Settings.Get("singleEmail").MustBool(false)
 
 	if addressesString == "" {
-		return nil, alerting.ValidationError{Reason: "Could not find addresses in settings"}
+		return nil, errors.ValidationError{Reason: "Could not find addresses in settings"}
 	}
 
 	// split addresses with a few different ways
@@ -68,7 +70,7 @@ func NewEmailNotifier(model *models.AlertNotification) (alerting.Notifier, error
 }
 
 // Notify sends the alert notification.
-func (en *EmailNotifier) Notify(evalContext *alerting.EvalContext) error {
+func (en *EmailNotifier) Notify(evalContext *evalcontext.EvalContext) error {
 	en.log.Info("Sending alert notification to", "addresses", en.Addresses, "singleEmail", en.SingleEmail)
 
 	ruleURL, err := evalContext.GetRuleURL()

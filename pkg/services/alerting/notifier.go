@@ -11,6 +11,7 @@ import (
 	"github.com/grafana/grafana/pkg/infra/log"
 	"github.com/grafana/grafana/pkg/infra/metrics"
 	"github.com/grafana/grafana/pkg/models"
+	"github.com/grafana/grafana/pkg/services/alerting/evalcontext"
 	"github.com/grafana/grafana/pkg/services/rendering"
 	"github.com/grafana/grafana/pkg/setting"
 )
@@ -95,7 +96,7 @@ type notificationService struct {
 	renderService rendering.Service
 }
 
-func (n *notificationService) SendIfNeeded(evalCtx *EvalContext) error {
+func (n *notificationService) SendIfNeeded(evalCtx *evalcontext.EvalContext) error {
 	notifierStates, err := n.getNeededNotifiers(evalCtx.Rule.OrgID, evalCtx.Rule.Notifications, evalCtx)
 	if err != nil {
 		n.log.Error("Failed to get alert notifiers", "error", err)
@@ -125,13 +126,14 @@ func (n *notificationService) SendIfNeeded(evalCtx *EvalContext) error {
 	return n.sendNotifications(evalCtx, notifierStates)
 }
 
-func (n *notificationService) sendAndMarkAsComplete(evalContext *EvalContext, notifierState *notifierState) error {
+func (n *notificationService) sendAndMarkAsComplete(evalContext *evalcontext.EvalContext,
+	notifierState *notifierState) error {
 	notifier := notifierState.notifier
 
 	n.log.Debug("Sending notification", "type", notifier.GetType(), "uid", notifier.GetNotifierUID(), "isDefault", notifier.GetIsDefault())
 	metrics.MAlertingNotificationSent.WithLabelValues(notifier.GetType()).Inc()
 
-	if err := evalContext.evaluateNotificationTemplateFields(); err != nil {
+	if err := evalContext.EvaluateNotificationTemplateFields(); err != nil {
 		n.log.Error("failed trying to evaluate notification template fields", "uid", notifier.GetNotifierUID(), "error", err)
 	}
 
@@ -153,7 +155,7 @@ func (n *notificationService) sendAndMarkAsComplete(evalContext *EvalContext, no
 	return bus.DispatchCtx(evalContext.Ctx, cmd)
 }
 
-func (n *notificationService) sendNotification(evalContext *EvalContext, notifierState *notifierState) error {
+func (n *notificationService) sendNotification(evalContext *evalcontext.EvalContext, notifierState *notifierState) error {
 	if !evalContext.IsTestRun {
 		setPendingCmd := &models.SetAlertNotificationStateToPendingCommand{
 			Id:                           notifierState.state.Id,
@@ -178,7 +180,7 @@ func (n *notificationService) sendNotification(evalContext *EvalContext, notifie
 	return n.sendAndMarkAsComplete(evalContext, notifierState)
 }
 
-func (n *notificationService) sendNotifications(evalContext *EvalContext, notifierStates notifierStateSlice) error {
+func (n *notificationService) sendNotifications(evalContext *evalcontext.EvalContext, notifierStates notifierStateSlice) error {
 	for _, notifierState := range notifierStates {
 		err := n.sendNotification(evalContext, notifierState)
 		if err != nil {
@@ -191,7 +193,7 @@ func (n *notificationService) sendNotifications(evalContext *EvalContext, notifi
 	return nil
 }
 
-func (n *notificationService) renderAndUploadImage(evalCtx *EvalContext, timeout time.Duration) (err error) {
+func (n *notificationService) renderAndUploadImage(evalCtx *evalcontext.EvalContext, timeout time.Duration) (err error) {
 	uploader, err := newImageUploaderProvider()
 	if err != nil {
 		return err
@@ -241,7 +243,8 @@ func (n *notificationService) renderAndUploadImage(evalCtx *EvalContext, timeout
 	return nil
 }
 
-func (n *notificationService) getNeededNotifiers(orgID int64, notificationUids []string, evalContext *EvalContext) (notifierStateSlice, error) {
+func (n *notificationService) getNeededNotifiers(orgID int64, notificationUids []string,
+	evalContext *evalcontext.EvalContext) (notifierStateSlice, error) {
 	query := &models.GetAlertNotificationsWithUidToSendQuery{OrgId: orgID, Uids: notificationUids}
 
 	if err := bus.Dispatch(query); err != nil {

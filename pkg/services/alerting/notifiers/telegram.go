@@ -11,6 +11,8 @@ import (
 	"github.com/grafana/grafana/pkg/infra/log"
 	"github.com/grafana/grafana/pkg/models"
 	"github.com/grafana/grafana/pkg/services/alerting"
+	"github.com/grafana/grafana/pkg/services/alerting/errors"
+	"github.com/grafana/grafana/pkg/services/alerting/evalcontext"
 )
 
 const (
@@ -63,7 +65,7 @@ type TelegramNotifier struct {
 // NewTelegramNotifier is the constructor for the Telegram notifier
 func NewTelegramNotifier(model *models.AlertNotification) (alerting.Notifier, error) {
 	if model.Settings == nil {
-		return nil, alerting.ValidationError{Reason: "No Settings Supplied"}
+		return nil, errors.ValidationError{Reason: "No Settings Supplied"}
 	}
 
 	botToken := model.DecryptedValue("bottoken", model.Settings.Get("bottoken").MustString())
@@ -71,11 +73,11 @@ func NewTelegramNotifier(model *models.AlertNotification) (alerting.Notifier, er
 	uploadImage := model.Settings.Get("uploadImage").MustBool()
 
 	if botToken == "" {
-		return nil, alerting.ValidationError{Reason: "Could not find Bot Token in settings"}
+		return nil, errors.ValidationError{Reason: "Could not find Bot Token in settings"}
 	}
 
 	if chatID == "" {
-		return nil, alerting.ValidationError{Reason: "Could not find Chat Id in settings"}
+		return nil, errors.ValidationError{Reason: "Could not find Chat Id in settings"}
 	}
 
 	return &TelegramNotifier{
@@ -87,7 +89,7 @@ func NewTelegramNotifier(model *models.AlertNotification) (alerting.Notifier, er
 	}, nil
 }
 
-func (tn *TelegramNotifier) buildMessage(evalContext *alerting.EvalContext, sendImageInline bool) (*models.SendWebhookSync, error) {
+func (tn *TelegramNotifier) buildMessage(evalContext *evalcontext.EvalContext, sendImageInline bool) (*models.SendWebhookSync, error) {
 	if sendImageInline {
 		cmd, err := tn.buildMessageInlineImage(evalContext)
 		if err == nil {
@@ -100,7 +102,7 @@ func (tn *TelegramNotifier) buildMessage(evalContext *alerting.EvalContext, send
 	return tn.buildMessageLinkedImage(evalContext)
 }
 
-func (tn *TelegramNotifier) buildMessageLinkedImage(evalContext *alerting.EvalContext) (*models.SendWebhookSync, error) {
+func (tn *TelegramNotifier) buildMessageLinkedImage(evalContext *evalcontext.EvalContext) (*models.SendWebhookSync, error) {
 	message := fmt.Sprintf("<b>%s</b>\nState: %s\nMessage: %s\n", evalContext.GetNotificationTitle(), evalContext.Rule.Name, evalContext.Rule.Message)
 
 	ruleURL, err := evalContext.GetRuleURL()
@@ -130,7 +132,7 @@ func (tn *TelegramNotifier) buildMessageLinkedImage(evalContext *alerting.EvalCo
 	})
 }
 
-func (tn *TelegramNotifier) buildMessageInlineImage(evalContext *alerting.EvalContext) (*models.SendWebhookSync, error) {
+func (tn *TelegramNotifier) buildMessageInlineImage(evalContext *evalcontext.EvalContext) (*models.SendWebhookSync, error) {
 	var imageFile *os.File
 	var err error
 
@@ -212,7 +214,7 @@ func (tn *TelegramNotifier) generateTelegramCmd(message string, messageField str
 	return cmd, nil
 }
 
-func generateMetricsMessage(evalContext *alerting.EvalContext) string {
+func generateMetricsMessage(evalContext *evalcontext.EvalContext) string {
 	metrics := ""
 	fieldLimitCount := 4
 	for index, evt := range evalContext.EvalMatches {
@@ -224,7 +226,7 @@ func generateMetricsMessage(evalContext *alerting.EvalContext) string {
 	return metrics
 }
 
-func generateImageCaption(evalContext *alerting.EvalContext, ruleURL string, metrics string) string {
+func generateImageCaption(evalContext *evalcontext.EvalContext, ruleURL string, metrics string) string {
 	message := evalContext.GetNotificationTitle()
 
 	if len(evalContext.Rule.Message) > 0 {
@@ -257,7 +259,7 @@ func appendIfPossible(message string, extra string, sizeLimit int) string {
 }
 
 // Notify send an alert notification to Telegram.
-func (tn *TelegramNotifier) Notify(evalContext *alerting.EvalContext) error {
+func (tn *TelegramNotifier) Notify(evalContext *evalcontext.EvalContext) error {
 	var cmd *models.SendWebhookSync
 	var err error
 	if evalContext.ImagePublicURL == "" && tn.UploadImage {

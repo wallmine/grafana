@@ -1,9 +1,9 @@
-package alerting
+package job
 
 import (
 	"sync"
 
-	"github.com/grafana/grafana/pkg/components/null"
+	"github.com/grafana/grafana/pkg/services/alerting/rule"
 )
 
 // Job holds state about when the alert rule should be evaluated.
@@ -12,7 +12,7 @@ type Job struct {
 	OffsetWait  bool
 	Delay       bool
 	running     bool
-	Rule        *Rule
+	Rule        *rule.Rule
 	runningLock sync.Mutex // Lock for running property which is used in the Scheduler and AlertEngine execution
 }
 
@@ -28,17 +28,4 @@ func (j *Job) SetRunning(b bool) {
 	j.runningLock.Lock()
 	j.running = b
 	j.runningLock.Unlock()
-}
-
-// ResultLogEntry represents log data for the alert evaluation.
-type ResultLogEntry struct {
-	Message string
-	Data    interface{}
-}
-
-// EvalMatch represents the series violating the threshold.
-type EvalMatch struct {
-	Value  null.Float        `json:"value"`
-	Metric string            `json:"metric"`
-	Tags   map[string]string `json:"tags"`
 }

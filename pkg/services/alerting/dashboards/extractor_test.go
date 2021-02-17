@@ -1,4 +1,4 @@
-package alerting
+package dashboards
 
 import (
 	"io/ioutil"

@@ -6,6 +6,9 @@ import (
 	"net/http"
 
 	"github.com/grafana/grafana/pkg/components/securejsondata"
+	"github.com/grafana/grafana/pkg/services/alerting/alertingmodels"
+	"github.com/grafana/grafana/pkg/services/alerting/evalcontext"
+	"github.com/grafana/grafana/pkg/services/alerting/rule"
 
 	"github.com/grafana/grafana/pkg/bus"
 	"github.com/grafana/grafana/pkg/components/null"
@@ -75,8 +78,8 @@ func handleNotificationTestCommand(ctx context.Context, cmd *NotificationTestCom
 	return notifier.sendNotifications(createTestEvalContext(cmd), notifierStateSlice{{notifier: notifiers}})
 }
 
-func createTestEvalContext(cmd *NotificationTestCommand) *EvalContext {
-	testRule := &Rule{
+func createTestEvalContext(cmd *NotificationTestCommand) *evalcontext.EvalContext {
+	testRule := &rule.Rule{
 		DashboardID: 1,
 		PanelID:     1,
 		Name:        "Test notification",
@@ -84,7 +87,7 @@ func createTestEvalContext(cmd *NotificationTestCommand) *EvalContext {
 		State:       models.AlertStateAlerting,
 	}
 
-	ctx := NewEvalContext(context.Background(), testRule, fakeRequestValidator{})
+	ctx := evalcontext.NewEvalContext(context.Background(), testRule, fakeRequestValidator{})
 	if cmd.Settings.Get("uploadImage").MustBool(true) {
 		ctx.ImagePublicURL = "https://grafana.com/assets/img/blog/mixed_styles.png"
 	}
@@ -96,14 +99,14 @@ func createTestEvalContext(cmd *NotificationTestCommand) *EvalContext {
 	return ctx
 }
 
-func evalMatchesBasedOnState() []*EvalMatch {
-	matches := make([]*EvalMatch, 0)
-	matches = append(matches, &EvalMatch{
+func evalMatchesBasedOnState() []*alertingmodels.EvalMatch {
+	matches := make([]*alertingmodels.EvalMatch, 0)
+	matches = append(matches, &alertingmodels.EvalMatch{
 		Metric: "High value",
 		Value:  null.FloatFrom(100),
 	})
 
-	matches = append(matches, &EvalMatch{
+	matches = append(matches, &alertingmodels.EvalMatch{
 		Metric: "Higher Value",
 		Value:  null.FloatFrom(200),
 	})

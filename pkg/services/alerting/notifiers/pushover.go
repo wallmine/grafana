@@ -12,6 +12,8 @@ import (
 	"github.com/grafana/grafana/pkg/infra/log"
 	"github.com/grafana/grafana/pkg/models"
 	"github.com/grafana/grafana/pkg/services/alerting"
+	"github.com/grafana/grafana/pkg/services/alerting/errors"
+	"github.com/grafana/grafana/pkg/services/alerting/evalcontext"
 )
 
 const pushoverEndpoint = "https://api.pushover.net/1/messages.json"
@@ -210,10 +212,10 @@ func NewPushoverNotifier(model *models.AlertNotification) (alerting.Notifier, er
 	uploadImage := model.Settings.Get("uploadImage").MustBool(true)
 
 	if userKey == "" {
-		return nil, alerting.ValidationError{Reason: "User key not given"}
+		return nil, errors.ValidationError{Reason: "User key not given"}
 	}
 	if APIToken == "" {
-		return nil, alerting.ValidationError{Reason: "API token not given"}
+		return nil, errors.ValidationError{Reason: "API token not given"}
 	}
 	return &PushoverNotifier{
 		NotifierBase:     NewNotifierBase(model),
@@ -249,7 +251,7 @@ type PushoverNotifier struct {
 }
 
 // Notify sends a alert notification to Pushover
-func (pn *PushoverNotifier) Notify(evalContext *alerting.EvalContext) error {
+func (pn *PushoverNotifier) Notify(evalContext *evalcontext.EvalContext) error {
 	ruleURL, err := evalContext.GetRuleURL()
 	if err != nil {
 		pn.log.Error("Failed get rule link", "error", err)
@@ -292,7 +294,8 @@ func (pn *PushoverNotifier) Notify(evalContext *alerting.EvalContext) error {
 	return nil
 }
 
-func (pn *PushoverNotifier) genPushoverBody(evalContext *alerting.EvalContext, message string, ruleURL string) (map[string]string, bytes.Buffer, error) {
+func (pn *PushoverNotifier) genPushoverBody(evalContext *evalcontext.EvalContext, message string,
+	ruleURL string) (map[string]string, bytes.Buffer, error) {
 	var b bytes.Buffer
 	var err error
 	w := multipart.NewWriter(&b)

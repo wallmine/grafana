@@ -7,6 +7,8 @@ import (
 	"github.com/grafana/grafana/pkg/infra/log"
 	"github.com/grafana/grafana/pkg/models"
 	"github.com/grafana/grafana/pkg/services/alerting"
+	"github.com/grafana/grafana/pkg/services/alerting/errors"
+	"github.com/grafana/grafana/pkg/services/alerting/evalcontext"
 )
 
 func init() {
@@ -33,7 +35,7 @@ func init() {
 func NewTeamsNotifier(model *models.AlertNotification) (alerting.Notifier, error) {
 	url := model.Settings.Get("url").MustString()
 	if url == "" {
-		return nil, alerting.ValidationError{Reason: "Could not find url property in settings"}
+		return nil, errors.ValidationError{Reason: "Could not find url property in settings"}
 	}
 
 	return &TeamsNotifier{
@@ -52,7 +54,7 @@ type TeamsNotifier struct {
 }
 
 // Notify send an alert notification to Microsoft teams.
-func (tn *TeamsNotifier) Notify(evalContext *alerting.EvalContext) error {
+func (tn *TeamsNotifier) Notify(evalContext *evalcontext.EvalContext) error {
 	tn.log.Info("Executing teams notification", "ruleId", evalContext.Rule.ID, "notification", tn.Name)
 
 	ruleURL, err := evalContext.GetRuleURL()

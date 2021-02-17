@@ -8,6 +8,7 @@ import (
 	"github.com/grafana/grafana/pkg/components/simplejson"
 	"github.com/grafana/grafana/pkg/models"
 	"github.com/grafana/grafana/pkg/services/dashboards"
+	"github.com/grafana/grafana/pkg/tsdb/tsdbifaces"
 )
 
 var varRegex = regexp.MustCompile(`(\$\{.+?\})`)
@@ -40,7 +41,7 @@ func (e DashboardInputMissingError) Error() string {
 	return fmt.Sprintf("Dashboard input variable: %v missing from import command", e.VariableName)
 }
 
-func (pm *PluginManager) ImportDashboard(cmd *ImportDashboardCommand) error {
+func (pm *PluginManager) ImportDashboard(cmd *ImportDashboardCommand, requestHandler tsdbifaces.RequestHandler) error {
 	var dashboard *models.Dashboard
 	if cmd.PluginId != "" {
 		var err error
@@ -77,7 +78,7 @@ func (pm *PluginManager) ImportDashboard(cmd *ImportDashboardCommand) error {
 		User:      cmd.User,
 	}
 
-	savedDash, err := dashboards.NewService().ImportDashboard(dto)
+	savedDash, err := dashboards.NewService(requestHandler).ImportDashboard(dto)
 	if err != nil {
 		return err
 	}

@@ -11,8 +11,11 @@ import (
 	"github.com/grafana/grafana/pkg/infra/log"
 	"github.com/grafana/grafana/pkg/models"
 	"github.com/grafana/grafana/pkg/registry"
+	"github.com/grafana/grafana/pkg/services/alerting/evalcontext"
+	"github.com/grafana/grafana/pkg/services/alerting/job"
 	"github.com/grafana/grafana/pkg/services/rendering"
 	"github.com/grafana/grafana/pkg/setting"
+	"github.com/grafana/grafana/pkg/tsdb"
 	"github.com/opentracing/opentracing-go"
 	"github.com/opentracing/opentracing-go/ext"
 	tlog "github.com/opentracing/opentracing-go/log"
@@ -24,10 +27,11 @@ import (
 // are sent.
 type AlertEngine struct {
 	RenderService    rendering.Service             `inject:""`
+	TSDBService      *tsdb.Service                 `inject:""`
 	Bus              bus.Bus                       `inject:""`
 	RequestValidator models.PluginRequestValidator `inject:""`
 
-	execQueue     chan *Job
+	execQueue     chan *job.Job
 	ticker        *Ticker
 	scheduler     scheduler
 	evalHandler   evalHandler
@@ -48,10 +52,10 @@ func (e *AlertEngine) IsDisabled() bool {
 // Init initializes the AlertingService.
 func (e *AlertEngine) Init() error {
 	e.ticker = NewTicker(time.Now(), time.Second*0, clock.New(), 1)
-	e.execQueue = make(chan *Job, 1000)
+	e.execQueue = make(chan *job.Job, 1000)
 	e.scheduler = newScheduler()
 	e.evalHandler = NewEvalHandler()
-	e.ruleReader = newRuleReader()
+	e.ruleReader = newRuleReader(e.TSDBService)
 	e.log = log.New("alerting.engine")
 	e.resultHandler = newResultHandler(e.RenderService)
 	return nil
@@ -109,7 +113,7 @@ var (
 	unfinishedWorkTimeout = time.Second * 5
 )
 
-func (e *AlertEngine) processJobWithRetry(grafanaCtx context.Context, job *Job) error {
+func (e *AlertEngine) processJobWithRetry(grafanaCtx context.Context, job *job.Job) error {
 	defer func() {
 		if err := recover(); err != nil {
 			e.log.Error("Alert Panic", "error", err, "stack", log.Stack(1))
@@ -144,7 +148,7 @@ func (e *AlertEngine) processJobWithRetry(grafanaCtx context.Context, job *Job) 
 	}
 }
 
-func (e *AlertEngine) endJob(err error, cancelChan chan context.CancelFunc, job *Job) error {
+func (e *AlertEngine) endJob(err error, cancelChan chan context.CancelFunc, job *job.Job) error {
 	job.SetRunning(false)
 	close(cancelChan)
 	for cancelFn := range cancelChan {
@@ -153,7 +157,7 @@ func (e *AlertEngine) endJob(err error, cancelChan chan context.CancelFunc, job 
 	return err
 }
 
-func (e *AlertEngine) processJob(attemptID int, attemptChan chan int, cancelChan chan context.CancelFunc, job *Job) {
+func (e *AlertEngine) processJob(attemptID int, attemptChan chan int, cancelChan chan context.CancelFunc, job *job.Job) {
 	defer func() {
 		if err := recover(); err != nil {
 			e.log.Error("Alert Panic", "error", err, "stack", log.Stack(1))
@@ -165,7 +169,7 @@ func (e *AlertEngine) processJob(attemptID int, attemptChan chan int, cancelChan
 	span := opentracing.StartSpan("alert execution")
 	alertCtx = opentracing.ContextWithSpan(alertCtx, span)
 
-	evalContext := NewEvalContext(alertCtx, job.Rule, e.RequestValidator)
+	evalContext := evalcontext.NewEvalContext(alertCtx, job.Rule, e.RequestValidator)
 	evalContext.Ctx = alertCtx
 
 	go func() {
