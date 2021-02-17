@@ -9,6 +9,7 @@ import (
 	pluginmodels "github.com/grafana/grafana/pkg/plugins/models"
 	"github.com/grafana/grafana/pkg/registry"
 	"github.com/grafana/grafana/pkg/setting"
+	"github.com/grafana/grafana/pkg/tsdb/cloudmonitoring"
 	"github.com/grafana/grafana/pkg/tsdb/cloudwatch"
 	"github.com/grafana/grafana/pkg/tsdb/elasticsearch"
 	"github.com/grafana/grafana/pkg/tsdb/graphite"
@@ -55,6 +56,7 @@ func (s *Service) Init() error {
 	s.registry["mysql"] = mysql.NewExecutor
 	s.registry["elasticsearch"] = elasticsearch.NewExecutor
 	s.registry["cloudwatch"] = s.CloudWatchService.NewExecutor
+	s.registry["stackdriver"] = cloudmonitoring.NewExecutor
 	return nil
 }
 
