@@ -15,10 +15,10 @@ $theme-name: light;
 
 // New Colors
 // -------------------------
-$blue-light: #5794f2;
-$blue-base: #3274d9;
+$blue-light: #858af7;
+$blue-base: #5056ed;
 $blue-shade: #1f60c4;
-$red-base: #e02f44;
+$red-base: #e5613e;
 $red-shade: #c4162a;
 $green-base: #3eb15b;
 $green-shade: #369b4f;
@@ -26,14 +26,14 @@ $orange-dark: #ed5700;
 
 $gray98: #f7f8fa;
 $gray95: #e9edf2;
-$gray85: #c7d0d9;
-$gray70: #9fa7b3;
-$gray60: #7b8087;
+$gray85: #b8bfd1;
+$gray70: #b8bfd1;
+$gray60: #939db8;
 $gray33: #464c54;
-$gray25: #2c3235;
-$gray15: #202226;
-$gray10: #141619;
-$gray05: #0b0c0e;
+$gray25: #3b4254;
+$gray15: #2f3647;
+$gray10: #222838;
+$gray05: #121826;
 
 // Grays
 // -------------------------
@@ -55,19 +55,19 @@ $white: #ffffff;
 
 // Accent colors
 // -------------------------
-$blue: #33a2e5;
+$blue: #858af7;
 $red: $red-base;
 $yellow: #ff851b;
 $orange: #ff7941;
 $purple: #9954bb;
-$variable: #33a2e5;
+$variable: #858af7;
 
 $brand-primary: #ff7941;
 $brand-success: #3eb15b;
 $brand-warning: #ff7941;
-$brand-danger: #e02f44;
+$brand-danger: #e5613e;
 
-$query-red: #e02f44;
+$query-red: #e5613e;
 $query-green: #3eb15b;
 $query-purple: #9954bb;
 $query-orange: #ff7941;
@@ -85,12 +85,12 @@ $page-bg: #ffffff;
 $dashboard-bg: #f7f8fa;
 
 $text-color: #464c54;
-$text-color-strong: #202226;
+$text-color-strong: #2f3647;
 $text-color-semi-weak: #464c54;
-$text-color-weak: #7b8087;
-$text-color-faint: #9fa7b3;
-$text-color-emphasis: #202226;
-$text-blue: #33a2e5;
+$text-color-weak: #939db8;
+$text-color-faint: #b8bfd1;
+$text-color-emphasis: #2f3647;
+$text-blue: #858af7;
 
 $text-shadow-faint: none;
 
@@ -101,13 +101,13 @@ $brand-gradient-vertical: linear-gradient(#f05a28 30%, #fbca0a 99%);
 // Links
 // -------------------------
 $link-color: #464c54;
-$link-color-disabled: #7b8087;
-$link-hover-color: #202226;
-$external-link-color: #33a2e5;
+$link-color-disabled: #939db8;
+$link-hover-color: #2f3647;
+$external-link-color: #858af7;
 
 // Typography
 // -------------------------
-$headings-color: #2c3235;
+$headings-color: #3b4254;
 $abbr-border-color: $gray-2 !default;
 $text-muted: $text-color-weak;
 
@@ -198,13 +198,13 @@ $input-bg: $white;
 $input-bg-disabled: $gray-5;
 
 $input-color: #464c54;
-$input-border-color: #c7d0d9;
+$input-border-color: #b8bfd1;
 $input-box-shadow: none;
-$input-border-focus: #5794f2;
-$input-box-shadow-focus: #5794f2;
-$input-color-placeholder: #9fa7b3;
+$input-border-focus: #858af7;
+$input-box-shadow-focus: #858af7;
+$input-color-placeholder: #b8bfd1;
 $input-label-bg: #f1f5f9;
-$input-color-select-arrow: #7b8087;
+$input-color-select-arrow: #939db8;
 
 // search
 $search-shadow: 0 1px 5px 0 $gray-5;
@@ -238,13 +238,13 @@ $navbarBorder: 1px solid $gray-5;
 
 // Sidemenu
 // -------------------------
-$side-menu-bg: #202226;
-$side-menu-border: 1px solid #2c3235;
+$side-menu-bg: #2f3647;
+$side-menu-border: 1px solid #3b4254;
 $side-menu-bg-mobile: rgba(0, 0, 0, 0); //$gray-6;
-$side-menu-item-hover-bg: #2c3235;
+$side-menu-item-hover-bg: #3b4254;
 $side-menu-shadow: 5px 0px 10px -5px $gray-1;
 $side-menu-link-color: $gray-4;
-$side-menu-icon-color: #9fa7b3;
+$side-menu-icon-color: #b8bfd1;
 $side-menu-header-color: #e9edf2;
 
 // Menu dropdowns
@@ -375,8 +375,8 @@ $panel-editor-viz-item-bg-hover: lighten($blue-base, 45%);
 $panel-options-group-border: none;
 $panel-options-group-header-bg: $gray-5;
 
-$panel-grid-placeholder-bg: lighten(#5794f2, 30%);
-$panel-grid-placeholder-shadow: 0 0 4px #5794f2;
+$panel-grid-placeholder-bg: lighten(#858af7, 30%);
+$panel-grid-placeholder-shadow: 0 0 4px #858af7;
 
 // logs
 $logs-color-unknown: $gray-5;
