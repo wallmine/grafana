@@ -163,7 +163,7 @@ const getStyles = stylesFactory((theme: GrafanaTheme) => {
       }
     `,
     colorPickerPopoverDark: css`
-      color: #d8d9da;
+      color: #b8bfd1;
       background: linear-gradient(180deg, #1e2028 0%, #161719 104.25%);
       box-shadow: 0px 2px 4px ${theme.palette.black}, 0px 0px 2px ${theme.palette.black};
 

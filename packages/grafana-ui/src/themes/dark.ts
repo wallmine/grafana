@@ -7,22 +7,22 @@ const basicColors = {
   white: '#ffffff',
   dark1: '#141414',
   dark2: '#161719',
-  dark3: '#1f1f20',
+  dark3: '#222838',
   dark4: '#212124',
   dark5: '#222426',
   dark6: '#262628',
   dark7: '#292a2d',
-  dark8: '#2f2f32',
+  dark8: '#3b4254',
   dark9: '#343436',
   dark10: '#424345',
-  gray1: '#555555',
+  gray1: '#3b4254',
   gray2: '#8e8e8e',
   gray3: '#b3b3b3',
-  gray4: '#d8d9da',
+  gray4: '#b8bfd1',
   gray5: '#ececec',
   gray6: '#f4f5f8', // not used in dark theme
   gray7: '#fbfbfb', // not used in dark theme
-  redBase: '#e02f44',
+  redBase: '#e5613e',
   redShade: '#c4162a',
   greenBase: '#299c46',
   greenShade: '#23843b',
@@ -35,6 +35,7 @@ const basicColors = {
 };
 
 const backgrounds = {
+  bg0: basicColors.gray00,
   bg1: basicColors.gray10,
   bg2: basicColors.gray15,
   bg3: basicColors.gray25,
@@ -99,7 +100,7 @@ const darkTheme: GrafanaTheme = {
     brandWarning: basicColors.orange,
     brandDanger: basicColors.redBase,
     queryRed: basicColors.redBase,
-    queryGreen: '#74e680',
+    queryGreen: '#90be6d',
     queryPurple: '#fe85fc',
     queryOrange: basicColors.orange,
     online: basicColors.greenBase,
@@ -112,7 +113,7 @@ const darkTheme: GrafanaTheme = {
     ...form,
     ...textColors,
 
-    bodyBg: backgrounds.bg1,
+    bodyBg: backgrounds.bg0,
     panelBg: backgrounds.bg1,
     pageHeaderBg: backgrounds.bg2,
     pageHeaderBorder: borders.border1,
