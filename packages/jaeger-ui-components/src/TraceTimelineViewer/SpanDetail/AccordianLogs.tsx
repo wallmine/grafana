@@ -45,7 +45,7 @@ const getStyles = createStyle((theme: Theme) => {
     `,
     AccordianLogsContent: css`
       label: AccordianLogsContent;
-      background: ${autoColor(theme, '#f0f0f0')};
+      background: ${autoColor(theme, '#222838')};
       border-top: 1px solid ${autoColor(theme, '#d8d8d8')};
       padding: 0.5rem 0.5rem 0.25rem 0.5rem;
     `,

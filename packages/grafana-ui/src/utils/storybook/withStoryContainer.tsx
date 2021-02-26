@@ -9,7 +9,7 @@ const StoryContainer: React.FC<{ width?: number; height?: number; showBoundaries
   height,
   showBoundaries,
 }) => {
-  const checkColor = '#f0f0f0';
+  const checkColor = '#222838';
   const finalWidth = width ? `${width}px` : '100%';
   const finalHeight = height !== 0 ? `${height}px` : 'auto';
   const bgStyles =
