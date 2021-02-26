@@ -162,7 +162,7 @@ const getStyles = createStyle((theme: Theme) => {
         color: ${autoColor(theme, '#000')};
       }
       & .${nameWrapper}, &:hover .${nameWrapper} {
-        background: ${autoColor(theme, '#f0f0f0')};
+        background: ${autoColor(theme, '#222838')};
         box-shadow: 0 1px 0 ${autoColor(theme, '#ddd')};
       }
       & .${nameWrapperMatchingFilter} {

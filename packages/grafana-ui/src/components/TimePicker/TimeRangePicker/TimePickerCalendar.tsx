@@ -51,7 +51,7 @@ const getStyles = stylesFactory((theme: GrafanaTheme, isReversed = false) => {
       right: 0;
       bottom: 0;
       left: 0;
-      background: #202226;
+      background: #2f3647;
       opacity: 0.7;
       z-index: ${theme.zIndex.modalBackdrop};
       text-align: center;
