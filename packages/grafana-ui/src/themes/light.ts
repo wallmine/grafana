@@ -22,7 +22,7 @@ const basicColors = {
   gray5: '#dde4ed',
   gray6: '#e9edf2', // same as gray95
   gray7: '#f7f8fa', // same as gray98
-  redBase: '#e02f44',
+  redBase: '#e5613e',
   redShade: '#c4162a',
   greenBase: '#3eb15b',
   greenShade: '#369b4f',

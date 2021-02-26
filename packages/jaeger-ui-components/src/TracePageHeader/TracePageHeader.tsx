@@ -73,7 +73,7 @@ const getStyles = createStyle((theme: Theme) => {
       padding: 0 1rem;
       margin-bottom: -1px;
       &:hover {
-        background-color: #f0f0f0;
+        background-color: #222838;
         border-color: #ccc;
       }
     `,

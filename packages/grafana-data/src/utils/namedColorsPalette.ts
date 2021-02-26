@@ -125,7 +125,7 @@ export function getColorFromHexRgbOrName(color: string, type?: GrafanaThemeType)
     const darkTheme = ({
       type: themeType,
       colors: {
-        panelBg: '#141619',
+        panelBg: '#222838',
       },
     } as unknown) as GrafanaTheme;
 
@@ -157,15 +157,15 @@ const buildNamedColorsPalette = () => {
   const LightYellow = buildColorDefinition('yellow', 'light-yellow', ['#FADE2A', '#FFEE52']);
   const SuperLightYellow = buildColorDefinition('yellow', 'super-light-yellow', ['#FFEE52', '#FFF899']);
 
-  const BasicRed = buildColorDefinition('red', 'red', ['#E02F44', '#F2495C'], true);
+  const BasicRed = buildColorDefinition('red', 'red', ['#e5613e', '#F2495C'], true);
   const DarkRed = buildColorDefinition('red', 'dark-red', ['#AD0317', '#C4162A']);
-  const SemiDarkRed = buildColorDefinition('red', 'semi-dark-red', ['#C4162A', '#E02F44']);
+  const SemiDarkRed = buildColorDefinition('red', 'semi-dark-red', ['#C4162A', '#e5613e']);
   const LightRed = buildColorDefinition('red', 'light-red', ['#F2495C', '#FF7383']);
   const SuperLightRed = buildColorDefinition('red', 'super-light-red', ['#FF7383', '#FFA6B0']);
 
-  const BasicBlue = buildColorDefinition('blue', 'blue', ['#3274D9', '#5794F2'], true);
+  const BasicBlue = buildColorDefinition('blue', 'blue', ['#3274D9', '#858af7'], true);
   const DarkBlue = buildColorDefinition('blue', 'dark-blue', ['#1250B0', '#1F60C4']);
-  const SemiDarkBlue = buildColorDefinition('blue', 'semi-dark-blue', ['#1F60C4', '#3274D9']);
+  const SemiDarkBlue = buildColorDefinition('blue', 'semi-dark-blue', ['#1F60C4', '#5056ED']);
   const LightBlue = buildColorDefinition('blue', 'light-blue', ['#5794F2', '#8AB8FF']);
   const SuperLightBlue = buildColorDefinition('blue', 'super-light-blue', ['#8AB8FF', '#C0D8FF']);
 
